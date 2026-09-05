@@ -27,8 +27,6 @@ export default function ReviewList({ targetId, targetLabel }) {
 
     setReview('')
     navigate('/')
- }
-    
   }
 
   return (
