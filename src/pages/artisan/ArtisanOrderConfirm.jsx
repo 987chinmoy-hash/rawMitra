@@ -83,6 +83,9 @@ export default function ArtisanOrderConfirm() {
               pricePerUnit: order.pricePerUnit,
               transportCharge: order.transportTotal || order.transportCharge,
               validity: order.validity,
+              
+              neededBy: order.neededBy,
+              
               perArtisan: (order.perArtisan || []).map((p) => ({
                 artisanId: p.artisanId,
                 quantity: p.quantity,
