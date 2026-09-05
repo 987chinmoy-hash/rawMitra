@@ -1,4 +1,4 @@
-# rawMitra (ৰ'মিত্ৰ)
+# rawMitra 
 ### Shared Raw Material Procurement & Cost Coordination Portal
 > **Hackathon Problem Statement: WEB06** — Connecting rural artisans for collective raw material purchasing, transparent logistics cost allocation, and institutional fraud protection.
 
