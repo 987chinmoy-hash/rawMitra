@@ -1,37 +1,68 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppState, getCurrentArtisan } from '../../context/AppContext.jsx'
 import { MATERIAL_CATEGORIES, UNITS } from '../../data/seed.js'
 import { useTranslation } from '../../utils/i18n.js'
 import Stepper from '../../components/Stepper.jsx'
 import '../artisan/artisan.css'
 
-function emptyLine(defaultLocation) {
+function emptyLine(defaultLocation, initialData = {}) {
   return {
     key: Math.random().toString(36).slice(2),
-    category: MATERIAL_CATEGORIES[0],
-    specification: '',
-    quantity: '',
-    unit: UNITS[0],
-    location: defaultLocation || '',
-    requiredDate: '',
+    category: initialData.category || MATERIAL_CATEGORIES[0],
+    specification: initialData.spec || '',
+    quantity: initialData.qty || '',
+    unit: initialData.unit || UNITS[0],
+    location: initialData.location || defaultLocation || 'Sualkuchi, Assam',
+    requiredDate: initialData.requiredDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
   }
 }
 
 export default function ArtisanMaterials() {
+  const [searchParams] = useSearchParams()
   const state = useAppState()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { t } = useTranslation()
-  // Accept both locally-registered artisans and backend-authenticated users
-  const artisan = getCurrentArtisan(state) || (state.authUser?.role === 'artisan' ? state.authUser : null)
 
-  if (!artisan) {
-    navigate('/artisan/register')
-    return null
+  // Accept both locally-registered artisans and backend-authenticated users, with seed fallback
+  const artisan = getCurrentArtisan(state) || (state.authUser?.role === 'artisan' ? state.authUser : null) || state.artisans[0] || {
+    id: 'A-1001',
+    name: 'Deepa Boro',
+    role: 'artisan',
+    storeLocation: 'Sualkuchi, Assam',
   }
 
-  const [lines, setLines] = useState([emptyLine(artisan.storeLocation)])
+  const queryCat = searchParams.get('category')
+  const querySpec = searchParams.get('spec')
+  const queryUnit = searchParams.get('unit')
+  const queryQty = searchParams.get('qty')
+  const queryLoc = searchParams.get('location')
+
+  const [lines, setLines] = useState(() => [
+    emptyLine(artisan.storeLocation, {
+      category: queryCat,
+      spec: querySpec,
+      unit: queryUnit,
+      qty: queryQty,
+      location: queryLoc,
+    })
+  ])
+
+  // Update line if search params change
+  useEffect(() => {
+    if (queryCat || querySpec) {
+      setLines([
+        emptyLine(artisan.storeLocation, {
+          category: queryCat,
+          spec: querySpec,
+          unit: queryUnit,
+          qty: queryQty,
+          location: queryLoc,
+        })
+      ])
+    }
+  }, [queryCat, querySpec, queryUnit, queryQty, queryLoc, artisan.storeLocation])
 
   function updateLine(key, field, value) {
     setLines((ls) => ls.map((l) => (l.key === key ? { ...l, [field]: value } : l)))

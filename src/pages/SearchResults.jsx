@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
-import { useAppState } from '../context/AppContext.jsx'
+import { useSearchParams, Link, useNavigate } from 'react-router-dom'
+import { useAppState, useAppDispatch } from '../context/AppContext.jsx'
 import { useTranslation, expandSearchTokens, localizeLocation, localizeStatus } from '../utils/i18n.js'
 import RatingStars from '../components/RatingStars.jsx'
 import './SearchResults.css'
@@ -15,10 +15,12 @@ export default function SearchResults() {
   const [params] = useSearchParams()
   const q = params.get('q') || ''
   const state = useAppState()
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const { t, lang } = useTranslation()
 
   const results = useMemo(() => {
-    if (!q.trim()) return { orders: [], artisans: [], suppliers: [], coordinators: [], materials: [] }
+    if (!q.trim()) return { orders: [], artisans: [], suppliers: [], coordinators: [], materials: [], catalogItems: [] }
 
     const tokens = expandSearchTokens(q)
 
@@ -45,7 +47,26 @@ export default function SearchResults() {
       matchesAny(tokens, r.specification, r.category, r.location, r.unit)
     )
 
-    return { orders, artisans, suppliers, coordinators, materials }
+    // Extract all specific raw material items offered by suppliers that match the query
+    const catalogItems = []
+    state.suppliers.forEach((s) => {
+      (s.materials || []).forEach((m) => {
+        if (matchesAny(tokens, m.specification, m.category, s.name, s.storeLocation)) {
+          catalogItems.push({
+            ...m,
+            supplierId: s.id,
+            supplierName: s.name,
+            supplierLocation: s.storeLocation,
+            supplierRating: s.rating,
+            supplierLogistics: s.logistics,
+            supplierTransportCharge: s.transportCharge,
+            supplierValidity: s.validity,
+          })
+        }
+      })
+    })
+
+    return { orders, artisans, suppliers, coordinators, materials, catalogItems }
   }, [q, state])
 
   const total =
@@ -53,7 +74,30 @@ export default function SearchResults() {
     results.artisans.length +
     results.suppliers.length +
     results.coordinators.length +
-    results.materials.length
+    results.materials.length +
+    results.catalogItems.length
+
+  function handleBuyMaterial(item) {
+    const params = new URLSearchParams({
+      category: item.category,
+      spec: item.specification,
+      unit: item.unit || 'kg',
+      qty: item.minBulkQty ? String(item.minBulkQty) : '10',
+      location: item.supplierLocation || '',
+    })
+    navigate(`/artisan/materials?${params.toString()}`)
+  }
+
+  function handleJoinOpenRequest(req) {
+    const params = new URLSearchParams({
+      category: req.category,
+      spec: req.specification,
+      unit: req.unit || 'kg',
+      qty: String(req.quantity || '10'),
+      location: req.location || '',
+    })
+    navigate(`/artisan/materials?${params.toString()}`)
+  }
 
   return (
     <div className="page">
@@ -61,7 +105,7 @@ export default function SearchResults() {
         <h1 style={{ margin: 0 }}>
           {t('searchTitle')} {q && <span style={{ color: 'var(--ink-soft)', fontWeight: 400 }}>"{q}"</span>}
         </h1>
-        <span className="tag tag-brass">Special Feature: Multi-Field Search (≥ 2 Fields)</span>
+        <span className="tag tag-brass">Live Marketplace &amp; Supplier Catalog</span>
       </div>
       <p style={{ fontSize: '0.88rem', color: 'var(--ink-soft)', margin: '0 0 1.25rem' }}>
         {t('searchIndexingInfo')}
@@ -70,10 +114,130 @@ export default function SearchResults() {
       {!q.trim() && <p>{t('searchPrompt')}</p>}
       {q.trim() && total === 0 && <p>{t('noMatches')}</p>}
 
-      {/* Orders Matching */}
+      {/* 1. Directly Available Raw Materials from Suppliers to Buy */}
+      {results.catalogItems.length > 0 && (
+        <section style={{ marginBottom: '2rem' }}>
+          <h2 style={{ color: '#065f46', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            🧶 Available Raw Materials to Buy ({results.catalogItems.length})
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+            {results.catalogItems.map((item, idx) => (
+              <div
+                key={`${item.supplierId}-${item.specification}-${idx}`}
+                className="card"
+                style={{
+                  padding: '1.2rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  border: '1.5px solid var(--brass, #c08a28)',
+                  background: '#fdfbf7',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span className="tag tag-brass">{t(item.category) || item.category}</span>
+                    <span style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--ink)' }}>
+                      ₹{item.pricePerUnit?.toLocaleString('en-IN')} <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--ink-soft)' }}>/ {item.unit}</span>
+                    </span>
+                  </div>
+                  <h3 style={{ margin: '0.6rem 0 0.3rem', fontSize: '1.1rem' }}>
+                    {item.specification}
+                  </h3>
+                  <div className="field-hint" style={{ marginBottom: '0.6rem' }}>
+                    🏢 <strong>{item.supplierName}</strong> · 📍 {localizeLocation(item.supplierLocation, lang)}
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
+                    <span className="tag tag-green">Min Bulk Qty: {item.minBulkQty || 5} {item.unit}</span>
+                    {item.supplierValidity && (
+                      <span className="tag" style={{ background: '#fef3c7', color: '#92400e' }}>
+                        📅 Valid until {item.supplierValidity}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.6rem', marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ flex: 1 }}
+                    onClick={() => handleBuyMaterial(item)}
+                  >
+                    🛒 Buy / Group Buy This →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 2. Suppliers Matching */}
+      {results.suppliers.length > 0 && (
+        <section style={{ marginBottom: '2rem' }}>
+          <h2>🏢 {t('lblSuppliers')} ({results.suppliers.length})</h2>
+          {results.suppliers.map((s) => (
+            <div className="search-result" key={s.id} style={{ padding: '1.1rem', marginBottom: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                <div>
+                  <strong style={{ fontSize: '1.05rem' }}>{s.name}</strong> — {localizeLocation(s.storeLocation, lang)}
+                  <div style={{ marginTop: '0.25rem' }}>
+                    <RatingStars value={s.rating} />
+                  </div>
+                </div>
+                <span className="tag tag-brass">Verified Supplier</span>
+              </div>
+
+              <div style={{ marginTop: '0.75rem' }}>
+                <span style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--ink)' }}>Available Catalog Stock:</span>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.35rem' }}>
+                  {s.materials.map((m, mIdx) => (
+                    <button
+                      key={mIdx}
+                      type="button"
+                      className="btn btn-outline"
+                      style={{ fontSize: '0.8rem', padding: '0.35rem 0.65rem' }}
+                      onClick={() => handleBuyMaterial({ ...m, supplierLocation: s.storeLocation, supplierName: s.name })}
+                    >
+                      🛒 {m.specification} (₹{m.pricePerUnit}/{m.unit})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* 3. Open Material Requests & Group Pools to Join */}
+      {results.materials.length > 0 && (
+        <section style={{ marginBottom: '2rem' }}>
+          <h2>👥 Active Group Buying Pools ({results.materials.length})</h2>
+          {results.materials.map((r) => (
+            <div className="search-result" key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <strong style={{ fontSize: '1.02rem' }}>{t(r.category) || r.category} — {r.specification}</strong>
+                <div className="field-hint" style={{ marginTop: '0.25rem' }}>
+                  Pool Total: {r.quantity} {r.unit} · 📍 {localizeLocation(r.location, lang)} · Needed by: {r.requiredDate} · <span className="tag tag-green">{localizeStatus(r.status, lang)}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-brass"
+                onClick={() => handleJoinOpenRequest(r)}
+              >
+                👥 Join This Group Buy Pool →
+              </button>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* 4. Orders Matching */}
       {results.orders.length > 0 && (
-        <>
-          <h2 style={{ color: 'var(--brass-dark, #8c5b05)' }}>📦 {t('lblOrders')}</h2>
+        <section style={{ marginBottom: '2rem' }}>
+          <h2 style={{ color: 'var(--brass-dark, #8c5b05)' }}>📦 {t('lblOrders')} ({results.orders.length})</h2>
           {results.orders.map((o) => (
             <div className="search-result" key={o.id} style={{ borderLeft: '4px solid var(--brass)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap' }}>
@@ -90,43 +254,26 @@ export default function SearchResults() {
               </div>
             </div>
           ))}
-        </>
+        </section>
       )}
 
-      {/* Suppliers Matching */}
-      {results.suppliers.length > 0 && (
-        <>
-          <h2>{t('lblSuppliers')}</h2>
-          {results.suppliers.map((s) => (
-            <div className="search-result" key={s.id}>
-              <strong>{s.name}</strong> — {localizeLocation(s.storeLocation, lang)}
-              <div className="field-hint">
-                {t('lblSupplies')}{' '}
-                {s.materials.map((m) => `${t(m.category) || m.category}: ${m.specification}`).join('; ')}
-              </div>
-              <RatingStars value={s.rating} />
-            </div>
-          ))}
-        </>
-      )}
-
-      {/* Artisans Matching */}
+      {/* 5. Artisans Matching */}
       {results.artisans.length > 0 && (
-        <>
-          <h2>{t('lblArtisans')}</h2>
+        <section style={{ marginBottom: '2rem' }}>
+          <h2>🧶 {t('lblArtisans')}</h2>
           {results.artisans.map((a) => (
             <div className="search-result" key={a.id}>
               <strong>{a.name}</strong> — {localizeLocation(a.storeLocation, lang)}
               <div><RatingStars value={a.rating} /></div>
             </div>
           ))}
-        </>
+        </section>
       )}
 
-      {/* Coordinators Matching */}
+      {/* 6. Coordinators Matching */}
       {results.coordinators.length > 0 && (
-        <>
-          <h2>{t('lblCoordinators')}</h2>
+        <section style={{ marginBottom: '2rem' }}>
+          <h2>🚚 {t('lblCoordinators')}</h2>
           {results.coordinators.map((c) => (
             <div className="search-result" key={c.id}>
               <strong>{c.name}</strong>
@@ -134,27 +281,12 @@ export default function SearchResults() {
               <RatingStars value={c.rating} />
             </div>
           ))}
-        </>
-      )}
-
-      {/* Open Material Requests Matching */}
-      {results.materials.length > 0 && (
-        <>
-          <h2>{t('lblOpenRequests')}</h2>
-          {results.materials.map((r) => (
-            <div className="search-result" key={r.id}>
-              <strong>{t(r.category) || r.category} — {r.specification}</strong>
-              <div className="field-hint">
-                {r.quantity} {r.unit} · {localizeLocation(r.location, lang)} · {t('lblNeededBy')} {r.requiredDate} · {localizeStatus(r.status, lang)}
-              </div>
-            </div>
-          ))}
-        </>
+        </section>
       )}
 
       {q.trim() && (
         <p style={{ marginTop: '2rem' }}>
-          Not what you're looking for? <Link to="/start">Register or sign in</Link> to list your own need or offer.
+          Looking for something else? <Link to="/artisan/materials">Post a custom material request</Link> to broadcast to suppliers.
         </p>
       )}
     </div>

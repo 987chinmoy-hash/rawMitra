@@ -81,9 +81,10 @@ function reducer(state, action) {
       return { ...state, pendingOrder: action.payload }
 
     case 'ADD_MATERIAL_REQUESTS': {
+      const currentArtisanId = state.currentUserId || state.authUser?.id || 'A-1001'
       const newReqs = action.requests.map((r) => ({
         id: genId('R'),
-        artisanId: state.currentUserId,
+        artisanId: currentArtisanId,
         status: 'open',
         ...r,
       }))
@@ -99,7 +100,8 @@ function reducer(state, action) {
     }
 
     case 'ADD_BROADCAST': {
-      const broadcast = { id: genId('B'), artisanId: state.currentUserId, status: 'open', ...action.payload }
+      const currentArtisanId = state.currentUserId || state.authUser?.id || 'A-1001'
+      const broadcast = { id: genId('B'), artisanId: currentArtisanId, status: 'open', ...action.payload }
       return { ...state, broadcasts: [...state.broadcasts, broadcast] }
     }
 
@@ -111,17 +113,29 @@ function reducer(state, action) {
     }
 
     case 'CREATE_ORDER': {
+      const currentArtisanId = state.currentUserId || state.authUser?.id || 'A-1001'
+      const perArtisan = Array.isArray(action.payload.perArtisan) && action.payload.perArtisan.length > 0
+        ? action.payload.perArtisan
+        : [{
+            artisanId: currentArtisanId,
+            quantity: action.payload.totalQuantity || 10,
+            materialCost: action.payload.materialTotal || action.payload.totalCost || 1000,
+            transportShare: action.payload.transportTotal || 0,
+            totalCost: action.payload.totalCost || 1000,
+          }]
+
       const order = {
         id: genId('O'),
         status: 'confirmed',
         trackingStage: 0,
         coordinatorId: action.payload.coordinatorId || null,
         ...action.payload,
+        perArtisan,
       }
-      const involvedIds = new Set(order.perArtisan.map((p) => p.artisanId))
+      const involvedIds = new Set(perArtisan.map((p) => p.artisanId).filter(Boolean))
       return {
         ...state,
-        orders: [...state.orders, order],
+        orders: [order, ...state.orders],
         pendingOrder: null,
         materialRequests: state.materialRequests.map((r) =>
           involvedIds.has(r.artisanId) && r.category === order.category && r.status === 'open'
