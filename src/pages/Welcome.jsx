@@ -16,7 +16,6 @@ export default function Welcome() {
           </svg>
         </div>
         <div className="hero-content page">
-          <span className="tag tag-brass">{t('welcomeHeroBadge')}</span>
           <h1>{t('welcomeHeroTitle')}</h1>
           <p className="hero-sub">
             {t('welcomeHeroSub')}
