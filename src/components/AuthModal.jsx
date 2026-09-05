@@ -31,19 +31,6 @@ export default function AuthModal({ isOpen, onClose }) {
     navigate(ROLE_LANDING[user.role] || '/')
   }
 
-  async function handleQuickLogin(demoPhone, demoPass) {
-    setError(null)
-    setLoading(true)
-    try {
-      const res = await api.auth.login({ phone: demoPhone, password: demoPass })
-      afterAuth(res.user)
-    } catch (err) {
-      setError(err.message || 'Login failed. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
@@ -51,14 +38,14 @@ export default function AuthModal({ isOpen, onClose }) {
 
     try {
       if (tab === 'login') {
-        const res = await api.auth.login({ phone, password: password || 'password123' })
+        const res = await api.auth.login({ phone, password })
         afterAuth(res.user)
       } else {
         const res = await api.auth.register({
           role,
           name,
           phone,
-          password: password || 'password123',
+          password,
           aadhar,
           storeLocation: role !== 'coordinator' ? locationOrExp : undefined,
           experience: role === 'coordinator' ? locationOrExp : undefined,
@@ -96,40 +83,6 @@ export default function AuthModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Demo Fast Fill Bar for Judges */}
-        <div className="auth-demo-bar">
-          <strong>⚡ 1-Click Instant Demo Login:</strong>
-          <div className="auth-demo-buttons">
-            <button
-              type="button"
-              className="btn-demo-pill"
-              onClick={() => handleQuickLogin('9864000001', 'password123')}
-              disabled={loading}
-              title="Instant sign-in as Deepa Boro"
-            >
-              🟢 Deepa (Artisan)
-            </button>
-            <button
-              type="button"
-              className="btn-demo-pill"
-              onClick={() => handleQuickLogin('9435000014', 'password123')}
-              disabled={loading}
-              title="Instant sign-in as Assam Bamboo Syndicate"
-            >
-              🔵 Assam Bamboo (Supplier)
-            </button>
-            <button
-              type="button"
-              className="btn-demo-pill"
-              onClick={() => handleQuickLogin('9678000020', 'password123')}
-              disabled={loading}
-              title="Instant sign-in as Manash Sarma"
-            >
-              🟣 Manash (Coordinator)
-            </button>
-          </div>
-        </div>
-
         {error && (
           <div className="auth-error" role="alert">
             <strong>⚠️ Notice:</strong> {error}
@@ -161,7 +114,7 @@ export default function AuthModal({ isOpen, onClose }) {
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Tarun Rabha"
+                  placeholder="Enter full name or business name"
                   required
                 />
               </div>
@@ -182,7 +135,7 @@ export default function AuthModal({ isOpen, onClose }) {
                 <input
                   value={locationOrExp}
                   onChange={(e) => setLocationOrExp(e.target.value)}
-                  placeholder={role === 'coordinator' ? 'e.g. 5 years in transport co-op' : 'e.g. Sualkuchi, Assam'}
+                  placeholder={role === 'coordinator' ? 'Enter logistics experience' : 'Enter location (City, State)'}
                   required
                 />
               </div>
@@ -195,12 +148,9 @@ export default function AuthModal({ isOpen, onClose }) {
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder={tab === 'login' ? '10-digit phone (e.g. 9864000001 or your number)' : '10-digit mobile number'}
+              placeholder="10-digit mobile number"
               required
             />
-            {tab === 'login' && (
-              <span className="field-hint">💡 In demo mode: Any 10-digit phone number is accepted and auto-logged in.</span>
-            )}
           </div>
 
           <div className="field">
