@@ -70,4 +70,4 @@ export default function GuideBook() {
       </div>
     </div>
   )
-}
+]
