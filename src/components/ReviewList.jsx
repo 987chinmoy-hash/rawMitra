@@ -29,6 +29,11 @@ export default function ReviewList({ targetId, targetLabel }) {
 
     setSubmitted(true)
     setReview('')
+
+    // Automatically navigate back to main page after 2 seconds
+    setTimeout(() => {
+      navigate('/')
+    }, 2000)
   }
 
   return (
@@ -77,7 +82,7 @@ export default function ReviewList({ targetId, targetLabel }) {
           </h3>
           <p
             style={{
-              margin: '0 auto 1.25rem',
+              margin: '0 auto 1rem',
               maxWidth: '460px',
               fontSize: '0.92rem',
               color: '#15803d',
@@ -87,29 +92,8 @@ export default function ReviewList({ targetId, targetLabel }) {
             Your verified review for <strong>{targetLabel || 'the supplier'}</strong> has been successfully recorded.
             Your feedback protects fellow artisans, promotes transparent pricing, and strengthens our cluster!
           </p>
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => navigate('/artisan/materials')}
-            >
-              🧶 Start Next Procurement →
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => navigate('/artisan/matching')}
-            >
-              👥 View Group Deals
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ fontSize: '0.82rem' }}
-              onClick={() => setSubmitted(false)}
-            >
-              Write another note
-            </button>
+          <div style={{ fontSize: '0.88rem', color: '#047857', fontWeight: 600, marginTop: '0.5rem' }}>
+            ⏳ Returning to main page in 2 seconds...
           </div>
         </div>
       ) : (
