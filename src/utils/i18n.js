@@ -260,7 +260,7 @@ export const TRANSLATIONS = {
     searchPlaceholder: 'सामग्री, नाम या स्थान से खोजें (कम से कम 2 फ़ील्ड)...',
     priceOutlook: 'मूल्य रुझान (3-4 दिन)',
     //
-    guideTitle: 'मार्गदर्शिका',
+    guidetitle: 'मार्गदर्शिका',
     guideSubtitle: 'rawMitra पर प्रत्येक भूमिका के लिए एक संक्षिप्त मार्गदर्शिका।',
 
     guideArtisan: 'कारीगर',
@@ -509,7 +509,7 @@ export const TRANSLATIONS = {
     searchPlaceholder: 'সামগ্ৰী, নাম বা স্থান অনুসৰি সন্ধান কৰক...',
     priceOutlook: 'মূল্যৰ পূৰ্বাভাস (৩-৪ দিন)',
     //
-    guideTitle: 'নিৰ্দেশিকা',
+    guidetitle: 'নিৰ্দেশিকা',
     guideSubtitle: 'rawMitra-ৰ প্ৰতিটো ভূমিকাৰ বাবে এখন চমু নিৰ্দেশিকা।',
 
     guideArtisan: 'কাৰিকৰ',
