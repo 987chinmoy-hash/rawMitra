@@ -26,10 +26,8 @@ export function initDatabase() {
       rating REAL DEFAULT 5.0,
       reviews_count INTEGER DEFAULT 0,
       is_suspended INTEGER DEFAULT 0,
-
       onboarding_complete INTEGER DEFAULT 0,
-      current_step TEXT DEFAULT 'material_requirement',
-      
+      current_step TEXT DEFAULT 'role_setup',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -105,7 +103,6 @@ export function initDatabase() {
       specification TEXT NOT NULL,
       quantity REAL NOT NULL,
       unit TEXT NOT NULL,
-      location TEXT NOT NULL,
       deadline DATE NOT NULL,
       notes TEXT,
       status TEXT DEFAULT 'open' CHECK(status IN ('open', 'fulfilled', 'closed')),
@@ -122,6 +119,40 @@ export function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `)
+
+  // ============================================================
+  // DATABASE MIGRATION
+  // Adds new columns to an existing users table safely.
+  // Existing users and all existing data are preserved.
+  // ============================================================
+
+  const userColumns = db.prepare(`
+    PRAGMA table_info(users)
+  `).all()
+
+  const hasOnboardingComplete = userColumns.some(
+    column => column.name === 'onboarding_complete'
+  )
+
+  const hasCurrentStep = userColumns.some(
+    column => column.name === 'current_step'
+  )
+
+  // Add onboarding_complete if it doesn't already exist
+  if (!hasOnboardingComplete) {
+    db.exec(`
+      ALTER TABLE users
+      ADD COLUMN onboarding_complete INTEGER DEFAULT 0
+    `)
+  }
+
+  // Add current_step if it doesn't already exist
+  if (!hasCurrentStep) {
+    db.exec(`
+      ALTER TABLE users
+      ADD COLUMN current_step TEXT DEFAULT 'role_setup'
+    `)
+  }
 }
 
 export default db
