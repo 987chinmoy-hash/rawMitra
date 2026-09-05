@@ -32,25 +32,23 @@ export default function ArtisanOrderConfirm() {
   }
 
   function handleConfirm() {
-    // Save the order first
+    // Save the order.
     dispatch({
       type: 'CREATE_ORDER',
       payload: order,
     })
 
-    // Mark this workflow as completed.
-    // The account itself remains active so the artisan
-    // can start another order without registering again.
+    // The order is now placed, but the workflow is NOT completed.
+    // The artisan still needs to go through tracking, delivery,
+    // review and thank-you before the workflow becomes "completed".
     dispatch({
       type: 'UPDATE_PROGRESS',
-      current_step: 'completed',
+      current_step: 'delivery_tracking',
       onboarding_complete: true,
     })
 
-    // Return to Home.
-    // App.jsx will automatically redirect an authenticated
-    // returning artisan to /artisan/materials for a new order.
-    navigate('/')
+    // Continue to the tracking page instead of returning home.
+    navigate('/artisan/tracking')
   }
 
   return (
