@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from '../utils/i18n.js'
+import { useAppState, getCurrentArtisan } from '../context/AppContext.jsx'
 import './Welcome.css'
 
 export default function Welcome() {
   const { t } = useTranslation()
+  const state = useAppState()
+  const user = state.authUser || getCurrentArtisan(state)
+  const isArtisan = user?.role === 'artisan' || (!user?.role && state.currentUserId)
 
   return (
     <div>
@@ -16,12 +20,58 @@ export default function Welcome() {
           </svg>
         </div>
         <div className="hero-content page">
+          {user && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'rgba(192, 138, 40, 0.15)',
+                border: '1px solid rgba(192, 138, 40, 0.4)',
+                color: '#92400e',
+                borderRadius: '999px',
+                padding: '0.3rem 0.85rem',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                marginBottom: '1rem',
+              }}
+            >
+              <span>👤 Welcome back, {user.name}!</span>
+              <span>&middot;</span>
+              <span style={{ textTransform: 'capitalize' }}>{user.role || 'Artisan'} Account Active</span>
+            </div>
+          )}
+
           <h1>{t('welcomeHeroTitle')}</h1>
           <p className="hero-sub">
             {t('welcomeHeroSub')}
           </p>
-          <div className="hero-actions">
-            <Link to="/start" className="btn btn-primary">{t('enterBtn')}</Link>
+          <div className="hero-actions" style={{ flexWrap: 'wrap' }}>
+            {isArtisan ? (
+              <>
+                <Link to="/artisan/materials" className="btn btn-primary">
+                  🛒 Buy Raw Materials
+                </Link>
+                <Link to="/artisan/tracking" className="btn btn-brass">
+                  📦 Track Orders &amp; Deliveries
+                </Link>
+              </>
+            ) : user?.role === 'supplier' ? (
+              <>
+                <Link to="/supplier/pricing" className="btn btn-primary">
+                  🏷️ Manage Material Stock
+                </Link>
+                <Link to="/supplier/dashboard" className="btn btn-brass">
+                  📋 Supplier Dashboard
+                </Link>
+              </>
+            ) : user?.role === 'coordinator' ? (
+              <Link to="/coordinator/dashboard" className="btn btn-primary">
+                🚚 Logistics Hub
+              </Link>
+            ) : (
+              <Link to="/start" className="btn btn-primary">{t('enterBtn')}</Link>
+            )}
             <Link to="/guide" className="btn btn-outline">{t('readGuideBtn')}</Link>
           </div>
         </div>

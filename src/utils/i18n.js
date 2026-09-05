@@ -12,6 +12,7 @@ export const TRANSLATIONS = {
     priceOutlook: 'Price outlook',
     //
     guidetitle: 'Guidebook',
+    guideTitle: 'Guidebook',
     guideSubtitle: 'A short walkthrough for each role on rawMitra.',
 
     guideArtisan: 'Artisan',
@@ -180,6 +181,26 @@ export const TRANSLATIONS = {
     quoteGuaranteedUntil: 'Quotation guaranteed until',
     btnProceedConfirm: 'Proceed to Confirm Order →',
 
+    // Database Analysis & 3-Choice Procurement
+    dbAnalysisHeader: 'Database Analysis: Compatible Artisan Network Scanned',
+    dbAnalysisSub: 'Scanned active database records across Assam craft belts. Found compatible artisans with matching raw material requirements and proximity.',
+    scannedArtisans: 'Compatible Artisans Found',
+    pooledVolume: 'Consolidated Pooled Volume',
+    avgMatchScore: 'Cluster Match Score',
+    threeChoicesHeading: 'Select Your Procurement Plan (3 Curated Choices)',
+    threeChoicesSub: 'The system has analyzed your material requirement against active regional demand and generated 3 optimized purchasing plans.',
+    fellowArtisansInPool: 'Fellow Artisans in this Pool',
+    yourTotalPayable: 'Your Total Payable',
+    wholesaleCostPerUnit: 'Wholesale Unit Price',
+    freightShare: 'Fair Transport Share',
+    selectPlanBtn: 'Select This Plan',
+    selectedPlanBadge: '✓ Selected Plan',
+    costCalculationHeading: 'Itemized Whole Cost Calculation Breakdown',
+    quoteFreezeNotice: 'Quotation & Wholesale Price Locked per Rule 4 Anti-Price-Gouging guarantee.',
+    proceedToConfirmBtn: 'Proceed with Selected Plan →',
+    reviewOrderTitle: 'Rate & Review Order',
+    reviewOrderSub: 'Leave a verified review for this completed delivery to build community trust.',
+
     // Order Confirm
     confirmOrderTitle: 'Confirm Your Order & Cost Share',
     confirmOrderSub: 'Please review your individual material cost and fair transport share before placing this bulk order.',
@@ -261,6 +282,7 @@ export const TRANSLATIONS = {
     priceOutlook: 'मूल्य रुझान (3-4 दिन)',
     //
     guidetitle: 'मार्गदर्शिका',
+    guideTitle: 'मार्गदर्शिका',
     guideSubtitle: 'rawMitra पर प्रत्येक भूमिका के लिए एक संक्षिप्त मार्गदर्शिका।',
 
     guideArtisan: 'कारीगर',
@@ -428,6 +450,26 @@ export const TRANSLATIONS = {
     quoteGuaranteedUntil: 'कोटेशन गारंटी वैधता तिथि',
     btnProceedConfirm: 'ऑर्डर पुष्टि के लिए आगे बढ़ें →',
 
+    // Database Analysis & 3-Choice Procurement
+    dbAnalysisHeader: 'डेटाबेस विश्लेषण: संगत कारीगर नेटवर्क स्कैन किया गया',
+    dbAnalysisSub: 'असम शिल्प क्षेत्रों के सक्रिय डेटाबेस रिकॉर्ड स्कैन किए गए। समान कच्चा माल और नजदीकी स्थान वाले संगत कारीगर पाए गए।',
+    scannedArtisans: 'संगत कारीगर मिले',
+    pooledVolume: 'समेकित सामूहिक मात्रा',
+    avgMatchScore: 'क्लस्टर मिलान स्कोर',
+    threeChoicesHeading: 'अपनी खरीद योजना चुनें (3 विशेष विकल्प)',
+    threeChoicesSub: 'सिस्टम ने आपकी सामग्री की आवश्यकता का क्षेत्रीय मांग के आधार पर विश्लेषण किया और 3 अनुकूलित योजनाएं तैयार की हैं।',
+    fellowArtisansInPool: 'इस समूह के साथी कारीगर',
+    yourTotalPayable: 'आपकी कुल देय राशि',
+    wholesaleCostPerUnit: 'थोक इकाई मूल्य',
+    freightShare: 'उचित परिवहन हिस्सा',
+    selectPlanBtn: 'यह योजना चुनें',
+    selectedPlanBadge: '✓ चयनित योजना',
+    costCalculationHeading: 'मदवार संपूर्ण लागत गणना विवरण',
+    quoteFreezeNotice: 'नियम 4 मूल्य वृद्धि विरोधी गारंटी के अनुसार कोटेशन और थोक मूल्य लॉक हैं।',
+    proceedToConfirmBtn: 'चयनित योजना के साथ आगे बढ़ें →',
+    reviewOrderTitle: 'ऑर्डर का मूल्यांकन और समीक्षा करें',
+    reviewOrderSub: 'सामुदायिक विश्वास बढ़ाने के लिए इस डिलीवरी की सत्यापित समीक्षा दर्ज करें।',
+
     // Order Confirm
     confirmOrderTitle: 'अपने ऑर्डर और लागत हिस्से की पुष्टि करें',
     confirmOrderSub: 'ऑर्डर देने से पहले कृपया अपनी व्यक्तिगत सामग्री लागत और परिवहन हिस्से की समीक्षा करें।',
@@ -510,6 +552,7 @@ export const TRANSLATIONS = {
     priceOutlook: 'মূল্যৰ পূৰ্বাভাস (৩-৪ দিন)',
     //
     guidetitle: 'নিৰ্দেশিকা',
+    guideTitle: 'নিৰ্দেশিকা',
     guideSubtitle: 'rawMitra-ৰ প্ৰতিটো ভূমিকাৰ বাবে এখন চমু নিৰ্দেশিকা।',
 
     guideArtisan: 'কাৰিকৰ',
@@ -676,6 +719,26 @@ export const TRANSLATIONS = {
     yourTotalShare: 'আপোনাৰ মুঠ অংশ',
     quoteGuaranteedUntil: 'দৰৰ নিশ্চিত বৈধতা তাৰিখ',
     btnProceedConfirm: 'অৰ্ডাৰ নিশ্চিত কৰিবলৈ আগবাঢ়ক →',
+
+    // Database Analysis & 3-Choice Procurement
+    dbAnalysisHeader: 'তথ্যকোষ বিশ্লেষণ: সুসংগত কাৰিকৰ নেটৱৰ্ক স্কেন কৰা হৈছে',
+    dbAnalysisSub: 'অসমৰ বিভিন্ন শিল্পাঞ্চলৰ সক্ৰিয় তথ্য বিশ্লেষণ কৰা হৈছে। একে কেঁচামাল আৰু ওচৰৰ কাৰিকৰ বিচাৰি পোৱা গৈছে।',
+    scannedArtisans: 'সুসংগত কাৰিকৰ পোৱা গ\'ল',
+    pooledVolume: 'একত্ৰিত দলীয় পৰিমাণ',
+    avgMatchScore: 'ক্লাষ্টাৰ মিল স্ক\'ৰ',
+    threeChoicesHeading: 'আপোনাৰ ক্ৰয় পৰিকল্পনা বাছক (৩টা বিশেষ বিকল্প)',
+    threeChoicesSub: 'ছিষ্টেমে আপোনাৰ কেঁচামালৰ প্ৰয়োজনীয়তা বিশ্লেষণ কৰি ৩টা নিৰ্দিষ্ট ক্ৰয় বিকল্প প্ৰস্তুত কৰিছে।',
+    fellowArtisansInPool: 'এই দলৰ সহযোগী কাৰিকৰসকল',
+    yourTotalPayable: 'আপোনাৰ সৰ্বমুঠ পৰিশোধ',
+    wholesaleCostPerUnit: 'পাইকাৰী প্ৰতি একক দৰ',
+    freightShare: 'ন্যায্য পৰিবহণ অংশ',
+    selectPlanBtn: 'এই বিকল্প বাছক',
+    selectedPlanBadge: '✓ নিৰ্বাচিত বিকল্প',
+    costCalculationHeading: 'সম্পূৰ্ণ ব্যয় আৰু অংশৰ বিতং হিচাপ',
+    quoteFreezeNotice: 'নিয়ম ৪ অনুসৰি অতিৰিক্ত মূল্য বৃদ্ধি প্ৰতিৰোধ নিশ্চিত কৰিবলৈ পাইকাৰী দৰ লক কৰা হৈছে।',
+    proceedToConfirmBtn: 'নিৰ্বাচিত বিকল্পৰ সৈতে আগবাঢ়ক →',
+    reviewOrderTitle: 'অৰ্ডাৰ মূল্যায়ন আৰু পৰ্যালোচনা',
+    reviewOrderSub: 'সামাজিক বিশ্বাসযোগ্যতা বৃদ্ধিৰ বাবে এই যোগানৰ প্ৰমাণিত পৰ্যালোচনা দাখিল কৰক।',
 
     // Order Confirm
     confirmOrderTitle: 'আপোনাৰ অৰ্ডাৰ আৰু খৰচৰ অংশ নিশ্চিত কৰক',

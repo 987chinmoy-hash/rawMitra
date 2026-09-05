@@ -272,8 +272,11 @@ function reducer(state, action) {
         state.authUser?.id ||
         'A-1001'
 
+      const batchId = action.batchId || `BATCH-${Date.now().toString().slice(-6)}`
+
       const newReqs = action.requests.map((r) => ({
-        id: genId('R'),
+        id: r.id || genId('R'),
+        batchId: r.batchId || batchId,
         artisanId: currentArtisanId,
         status: 'open',
         ...r,
@@ -281,6 +284,8 @@ function reducer(state, action) {
 
       return {
         ...state,
+        currentBatchId: batchId,
+        currentBatchRequests: newReqs,
         materialRequests: [
           ...state.materialRequests,
           ...newReqs,
@@ -371,18 +376,32 @@ function reducer(state, action) {
           .filter(Boolean)
       )
 
+      const itemCategories = new Set(
+        Array.isArray(order.items) && order.items.length > 0
+          ? order.items.map((it) => it.category)
+          : [order.category]
+      )
+      const orderBatchId = order.batchId || null
+
       return {
         ...state,
         orders: [order, ...state.orders],
         pendingOrder: null,
-        materialRequests:
-          state.materialRequests.map((r) =>
+        currentBatchId: null,
+        currentBatchRequests: [],
+        materialRequests: state.materialRequests.map((r) => {
+          if (orderBatchId && r.batchId === orderBatchId) {
+            return { ...r, status: 'fulfilled' }
+          }
+          if (
             involvedIds.has(r.artisanId) &&
-            r.category === order.category &&
+            itemCategories.has(r.category) &&
             r.status === 'open'
-              ? { ...r, status: 'fulfilled' }
-              : r
-          ),
+          ) {
+            return { ...r, status: 'fulfilled' }
+          }
+          return r
+        }),
       }
     }
 
@@ -436,16 +455,17 @@ function reducer(state, action) {
     case 'ADD_RATING': {
       const key = action.targetId
       const existing = state.ratings[key] || []
+      const orderId = action.orderId
 
-      const updated = [
-        ...existing,
-        {
-          rating: action.rating,
-          review: action.review,
-          by: state.currentUserId,
-          date: new Date().toISOString(),
-        },
-      ]
+      const newReview = {
+        orderId,
+        rating: action.rating,
+        review: action.review,
+        by: action.byId || state.currentUserId,
+        date: new Date().toISOString(),
+      }
+
+      const updated = [...existing, newReview]
 
       return {
         ...state,
@@ -453,6 +473,15 @@ function reducer(state, action) {
           ...state.ratings,
           [key]: updated,
         },
+        orders: (state.orders || []).map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                userReview: newReview,
+                isReviewed: true,
+              }
+            : o
+        ),
       }
     }
 

@@ -167,3 +167,413 @@
   .offer-row { grid-template-columns: 1fr 1fr; }
   .solo-comparison-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   Database Analysis Radar & 3-Choice Procurement Styles
+   ============================================================ */
+
+.analysis-radar-card {
+  background: linear-gradient(135deg, #1B2A4A 0%, #253861 100%);
+  color: var(--white);
+  border-radius: var(--radius-m);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(27, 42, 74, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.analysis-radar-card::after {
+  content: '🛡️ SQLite Audit Verified';
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.analysis-radar-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  color: #FFFDF8;
+}
+
+.analysis-radar-sub {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 1.25rem;
+  max-width: 70ch;
+}
+
+.analysis-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.85rem;
+}
+
+.analysis-kpi-item {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-s);
+  padding: 0.75rem 0.9rem;
+  text-align: center;
+}
+
+.analysis-kpi-val {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fbbf24;
+}
+
+.analysis-kpi-lbl {
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 0.2rem;
+}
+
+/* 3 Curated Choices Grid */
+.choices-section-heading {
+  margin-bottom: 1.25rem;
+}
+
+.choices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 1.4rem;
+  margin-bottom: 2rem;
+}
+
+.choice-card {
+  background: var(--white);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  cursor: pointer;
+}
+
+.choice-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--brass);
+  box-shadow: 0 8px 24px rgba(27, 42, 74, 0.12);
+}
+
+.choice-card.is-selected {
+  border-color: var(--brass);
+  background: #fffdf9;
+  box-shadow: 0 0 0 3px rgba(192, 138, 40, 0.25), 0 8px 28px rgba(192, 138, 40, 0.15);
+}
+
+.choice-badge-top {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.choice-title {
+  font-size: 1.2rem;
+  margin: 0 0 0.25rem;
+  color: var(--ink);
+}
+
+.choice-subtitle {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin: 0 0 1rem;
+}
+
+.choice-supplier-box {
+  background: var(--paper);
+  border-radius: 6px;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.84rem;
+  margin-bottom: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.choice-peers-wrap {
+  margin-bottom: 1rem;
+}
+
+.choice-peers-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.choice-peers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.peer-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+.peer-chip.is-me {
+  background: #fef9c3;
+  border-color: #fef08a;
+  font-weight: 700;
+}
+
+.choice-cost-highlight {
+  background: #fafaf9;
+  border: 1.5px solid #e7e5e4;
+  border-radius: 8px;
+  padding: 0.9rem;
+  margin: 1rem 0;
+}
+
+.choice-cost-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.4rem;
+}
+
+.choice-cost-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.choice-cost-breakdown {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.choice-savings-tag {
+  display: inline-block;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  margin-top: 0.4rem;
+}
+
+.btn-select-choice {
+  width: 100%;
+  padding: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 0.5rem;
+  border: 1.5px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+}
+
+.choice-card.is-selected .btn-select-choice {
+  background: var(--brass);
+  border-color: var(--brass-dark);
+  color: var(--white);
+}
+
+/* Detail Cost Allocation Table */
+.selected-plan-detail-card {
+  background: var(--white);
+  border: 2px solid var(--brass);
+  border-radius: var(--radius-m);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 16px rgba(192, 138, 40, 0.1);
+}
+
+.selected-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.selected-plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.88rem;
+}
+
+.selected-plan-table th,
+.selected-plan-table td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.selected-plan-table th {
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.selected-plan-table tr.active-row {
+  background: rgba(192, 138, 40, 0.08);
+  font-weight: 700;
+}
+
+.action-bar-confirm {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+/* Multi-Material Switcher Bar */
+.material-switcher-card {
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.material-switcher-tabs {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.material-switcher-tab {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 0.65rem 0.95rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  flex: 1 1 200px;
+}
+
+.material-switcher-tab:hover {
+  border-color: var(--brass);
+  box-shadow: 0 2px 8px rgba(192, 138, 40, 0.12);
+}
+
+.material-switcher-tab.is-active {
+  border-color: var(--brass);
+  background: #fffdf7;
+  box-shadow: 0 0 0 2px rgba(192, 138, 40, 0.25);
+}
+
+.tab-qty-badge {
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-weight: 600;
+  margin-left: 0.25rem;
+}
+
+.tab-plan-label {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin-top: 0.2rem;
+}
+
+/* Consolidated Multi-Material Batch Order Summary */
+.batch-order-summary-card {
+  background: var(--white);
+  border: 2px solid var(--brass);
+  border-radius: var(--radius-m);
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 6px 20px rgba(192, 138, 40, 0.12);
+}
+
+.batch-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.88rem;
+}
+
+.batch-summary-table th,
+.batch-summary-table td {
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.batch-summary-table th {
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.batch-summary-table tr.is-editing-row {
+  background: rgba(192, 138, 40, 0.07);
+}
+
+.btn-text-edit {
+  background: transparent;
+  border: none;
+  color: var(--brass-dark, #8F6415);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.btn-text-edit:hover {
+  background: rgba(192, 138, 40, 0.1);
+}
+
+.batch-checkout-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1.5px solid var(--line);
+}
+

@@ -3,16 +3,28 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppState, getCurrentArtisan } from '../../context/AppContext.jsx'
 import { MATERIAL_CATEGORIES, UNITS } from '../../data/seed.js'
 import { useTranslation } from '../../utils/i18n.js'
+import { api } from '../../services/api.js'
 import Stepper from '../../components/Stepper.jsx'
 import '../artisan/artisan.css'
 
+const CATEGORY_DEFAULTS = {
+  Bamboo: { spec: 'Treated Bhaluka bamboo poles, 10ft', unit: 'piece', qty: '25' },
+  Yarn: { spec: 'Muga silk yarn, 20/22 denier', unit: 'kg', qty: '10' },
+  Clay: { spec: 'Terracotta potting clay, fine grade', unit: 'kg', qty: '50' },
+  Dyes: { spec: 'Natural indigo dye powder', unit: 'kg', qty: '5' },
+  Metal: { spec: 'High-purity Bell metal alloy ingots (Kanh)', unit: 'kg', qty: '20' },
+  'Packaging materials': { spec: 'Corrugated boxes, medium', unit: 'piece', qty: '50' },
+}
+
 function emptyLine(defaultLocation, initialData = {}) {
+  const cat = initialData.category || MATERIAL_CATEGORIES[0]
+  const defaults = CATEGORY_DEFAULTS[cat] || {}
   return {
     key: Math.random().toString(36).slice(2),
-    category: initialData.category || MATERIAL_CATEGORIES[0],
-    specification: initialData.spec || '',
-    quantity: initialData.qty || '',
-    unit: initialData.unit || UNITS[0],
+    category: cat,
+    specification: initialData.spec || defaults.spec || '',
+    quantity: initialData.qty || defaults.qty || '10',
+    unit: initialData.unit || defaults.unit || UNITS[0],
     location: initialData.location || defaultLocation || 'Sualkuchi, Assam',
     requiredDate:
       initialData.requiredDate ||
@@ -76,6 +88,32 @@ export default function ArtisanMaterials() {
     artisan.storeLocation,
   ])
 
+  function handleCategoryChange(key, newCategory) {
+    const defaults = CATEGORY_DEFAULTS[newCategory] || {}
+    setLines((ls) =>
+      ls.map((l) => {
+        if (l.key !== key) return l
+        const isDefaultSpec =
+          !l.specification ||
+          Object.values(CATEGORY_DEFAULTS).some((d) => d.spec === l.specification)
+        const isDefaultUnit =
+          !l.unit ||
+          Object.values(CATEGORY_DEFAULTS).some((d) => d.unit === l.unit)
+        const isDefaultQty =
+          !l.quantity ||
+          Object.values(CATEGORY_DEFAULTS).some((d) => d.qty === l.quantity)
+
+        return {
+          ...l,
+          category: newCategory,
+          specification: isDefaultSpec ? defaults.spec || '' : l.specification,
+          unit: isDefaultUnit ? defaults.unit || UNITS[0] : l.unit,
+          quantity: isDefaultQty ? defaults.qty || '10' : l.quantity,
+        }
+      })
+    )
+  }
+
   function updateLine(key, field, value) {
     setLines((ls) =>
       ls.map((l) => (l.key === key ? { ...l, [field]: value } : l))
@@ -93,38 +131,50 @@ export default function ArtisanMaterials() {
   function handleSubmit(e) {
     e.preventDefault()
 
-    const valid = lines.filter(
-      (l) =>
-        l.specification.trim() &&
-        l.quantity &&
-        l.location.trim() &&
-        l.requiredDate
-    )
+    const batchId = `BATCH-${Date.now().toString().slice(-6)}`
 
-    if (valid.length === 0) return
+    const reqPayload = lines.map((l, idx) => {
+      const defaults = CATEGORY_DEFAULTS[l.category] || {}
+      return {
+        id: `REQ-${l.category.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}${idx}`,
+        batchId,
+        artisanId: artisan.id || 'A-1001',
+        category: l.category || 'Bamboo',
+        specification: (l.specification && l.specification.trim()) || defaults.spec || `${l.category} standard craft grade`,
+        quantity: Number(l.quantity) || Number(defaults.qty) || 10,
+        unit: l.unit || defaults.unit || 'piece',
+        location: (l.location && l.location.trim()) || artisan.storeLocation || 'Sualkuchi, Assam',
+        requiredDate:
+          l.requiredDate ||
+          new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+        status: 'open',
+      }
+    })
+
+    // Optimistically sync with backend if token present
+    if (api.getToken()) {
+      api.materials.addRequests(reqPayload).catch((err) => {
+        console.warn('Backend material sync note:', err.message)
+      })
+    }
 
     dispatch({
       type: 'ADD_MATERIAL_REQUESTS',
-      requests: valid.map((l) => ({
-        category: l.category,
-        specification: l.specification.trim(),
-        quantity: Number(l.quantity),
-        unit: l.unit,
-        location: l.location.trim(),
-        requiredDate: l.requiredDate,
-      })),
+      batchId,
+      requests: reqPayload,
     })
 
     // Save the user's workflow progress in the backend.
-    // The user has completed the material requirement step
-    // and should resume from the group matching step next time.
     dispatch({
       type: 'UPDATE_PROGRESS',
       current_step: 'group_matching',
       onboarding_complete: false,
     })
 
-    navigate('/artisan/matching')
+    const primaryReq = reqPayload[0]
+    navigate(
+      `/artisan/matching?batchId=${batchId}&category=${encodeURIComponent(primaryReq.category)}&reqId=${encodeURIComponent(primaryReq.id)}`
+    )
   }
 
   return (
@@ -156,7 +206,7 @@ export default function ArtisanMaterials() {
                 <select
                   value={line.category}
                   onChange={(e) =>
-                    updateLine(line.key, 'category', e.target.value)
+                    handleCategoryChange(line.key, e.target.value)
                   }
                 >
                   {MATERIAL_CATEGORIES.map((c) => (
