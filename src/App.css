@@ -1,0 +1,19 @@
+.app-shell { min-height: 100%; display: flex; flex-direction: column; }
+main { flex: 1; }
+
+.page-wrapper { min-height: 100%; }
+
+@keyframes pageEnterAnim {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageEnterAnim 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}

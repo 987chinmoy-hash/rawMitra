@@ -1,0 +1,34 @@
+.hero {
+  position: relative;
+  background: var(--ink);
+  color: var(--white);
+  overflow: hidden;
+}
+.hero-thread { position: absolute; inset: 0; opacity: 0.5; }
+.hero-thread svg { width: 100%; height: 100%; }
+.hero-content { position: relative; padding-top: 4.5rem; padding-bottom: 5rem; max-width: 720px; }
+.hero-content h1 { color: var(--white); margin-top: 0.6rem; }
+.hero-sub { color: rgba(255,253,248,0.82); font-size: 1.05rem; }
+.hero-actions { display: flex; gap: 1rem; margin-top: 1.75rem; flex-wrap: wrap; }
+.hero-actions .btn-outline { color: var(--white); border-color: rgba(255,253,248,0.55); }
+.hero-actions .btn-outline:hover { background: var(--white); color: var(--ink); }
+
+.how-it-works { padding-top: 3.5rem; }
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.how-card {
+  border-top: 3px solid var(--brass);
+  padding-top: 0.9rem;
+}
+.how-num {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--brass);
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.how-card p { font-size: 0.92rem; color: var(--ink-soft); }

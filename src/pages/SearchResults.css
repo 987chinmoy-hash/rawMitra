@@ -1,0 +1,8 @@
+.search-result {
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 0.9rem;
+  background: var(--white);
+}
+.search-result .field-hint { margin-top: 0.3rem; }

@@ -1,0 +1,139 @@
+/* ============================================
+   rawMitra — design tokens
+   Theme: the indigo dye-vat and the loom.
+   Palette drawn from natural dye/craft materials,
+   not a generic SaaS palette.
+   ============================================ */
+:root {
+  --ink: #1B2A4A;          /* deep indigo dye */
+  --ink-soft: #43597B;     /* faded indigo thread */
+  --paper: #F6F1E5;        /* unbleached khadi cotton */
+  --paper-dim: #EBE2CE;    /* raw cotton, slightly toasted */
+  --brass: #C08A28;        /* brass/turmeric accent */
+  --brass-dark: #8F6415;
+  --rust: #8C3B2E;         /* madder root — warnings/penalties */
+  --thread-green: #3F6B4F; /* indigo-over-turmeric green */
+  --white: #FFFDF8;
+  --line: rgba(27, 42, 74, 0.15);
+
+  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-s: 4px;
+  --radius-m: 10px;
+  --shadow-card: 0 1px 0 rgba(27,42,74,0.06), 0 8px 24px -16px rgba(27,42,74,0.35);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0 0 0.5em;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+h1 { font-size: clamp(2.1rem, 4vw, 3.4rem); font-weight: 500; }
+h2 { font-size: clamp(1.5rem, 2.6vw, 2.1rem); }
+h3 { font-size: 1.25rem; }
+p { margin: 0 0 1em; max-width: 62ch; }
+a { color: var(--ink); }
+
+button, input, select, textarea { font-family: inherit; font-size: 1rem; }
+
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+.page-narrow { max-width: 720px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  border: none;
+  border-radius: var(--radius-s);
+  padding: 0.75rem 1.4rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--ink); color: var(--white); }
+.btn-primary:hover { background: #0f1b33; }
+.btn-brass { background: var(--brass); color: var(--white); }
+.btn-brass:hover { background: var(--brass-dark); }
+.btn-outline { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+.btn-outline:hover { background: var(--ink); color: var(--white); }
+.btn-ghost { background: transparent; color: var(--ink-soft); padding: 0.6rem 0.8rem; }
+.btn-ghost:hover { color: var(--ink); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-block { width: 100%; justify-content: center; }
+.btn-danger { background: var(--rust); color: var(--white); }
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-card);
+}
+
+.field { margin-bottom: 1.1rem; }
+.field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 0.35rem;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--white);
+  color: var(--ink);
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+  border-color: var(--brass);
+}
+.field-hint { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.3rem; }
+.field-error { font-size: 0.8rem; color: var(--rust); margin-top: 0.3rem; }
+.field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--paper-dim);
+  color: var(--ink-soft);
+}
+.tag-brass { background: rgba(192,138,40,0.15); color: var(--brass-dark); }
+.tag-green { background: rgba(63,107,79,0.14); color: var(--thread-green); }
+.tag-rust { background: rgba(140,59,46,0.12); color: var(--rust); }
+
+.divider { border: none; border-top: 1px solid var(--line); margin: 2rem 0; }
+
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

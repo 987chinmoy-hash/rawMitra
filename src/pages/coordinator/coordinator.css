@@ -1,0 +1,7 @@
+.deal-card {
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 1.1rem;
+  background: var(--white);
+}

@@ -1,0 +1,23 @@
+.supplier-material-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.9rem;
+  background: var(--white);
+}
+@media (max-width: 720px) {
+  .supplier-material-row { grid-template-columns: 1fr 1fr; }
+}
+.logistics-options { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin: 1rem 0 1.5rem; }
+.logistics-option {
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1rem;
+  cursor: pointer;
+  background: var(--white);
+}
+.logistics-option.is-selected { border-color: var(--brass); background: rgba(192,138,40,0.06); }

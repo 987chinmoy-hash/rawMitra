@@ -1,0 +1,30 @@
+.rules-banner {
+  border: 1.5px solid var(--rust);
+  background: rgba(140,59,46,0.05);
+  border-radius: var(--radius-m);
+  margin: 2rem 0;
+  overflow: hidden;
+}
+.rules-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding: 0.9rem 1.2rem;
+  font-weight: 700;
+  color: var(--rust);
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.rules-body { padding: 0 1.2rem 1.1rem; }
+.rules-body ul { margin: 0 0 1rem; padding-left: 1.1rem; }
+.rules-body li { margin-bottom: 0.5rem; font-size: 0.9rem; }
+.rules-penalty {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 0.8rem 1rem;
+  font-size: 0.88rem;
+}

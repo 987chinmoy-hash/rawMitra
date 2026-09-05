@@ -1,0 +1,114 @@
+.broadcast-popup {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  max-width: 420px;
+  background: #ffffff;
+  border: 2px solid var(--brass, #c08a28);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(27, 42, 74, 0.18);
+  padding: 1.1rem 1.25rem;
+  z-index: 999;
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.broadcast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.broadcast-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #fdf3d8;
+  color: #8c5b05;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.broadcast-close {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #718096;
+  line-height: 1;
+  padding: 0.2rem;
+}
+.broadcast-close:hover {
+  color: #1a202c;
+}
+
+.broadcast-title {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #1b2a4a;
+  margin-bottom: 0.35rem;
+}
+
+.broadcast-body {
+  font-size: 0.85rem;
+  color: #4a5568;
+  line-height: 1.45;
+  margin-bottom: 0.85rem;
+}
+
+.broadcast-meta {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: #718096;
+  margin-bottom: 0.75rem;
+}
+
+.broadcast-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.btn-popup-join {
+  background: #1b2a4a;
+  color: #ffffff;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+.btn-popup-join:hover {
+  background: #2a3e6b;
+}
+
+.btn-popup-dismiss {
+  background: transparent;
+  color: #718096;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+}
+.btn-popup-dismiss:hover {
+  background: #f7fafc;
+}
