@@ -202,8 +202,7 @@ export default function ArtisanMatching() {
         specification: chosenPlan?.supplier?.specification || req.specification,
         quantity: req.quantity,
         unit: req.unit,
-
-        neededBy: req.requiredDate,
+        
         
         chosenPlanId: chosenPlan?.id || 'choice-mega-bulk',
         chosenPlanTitle: chosenPlan?.title || 'District Mega-Bulk Tier',
