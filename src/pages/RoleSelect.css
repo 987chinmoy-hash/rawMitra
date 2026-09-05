@@ -4,6 +4,7 @@
   gap: 1.25rem;
   margin: 2rem 0;
 }
+
 .role-card {
   display: block;
   background: var(--white);
@@ -13,10 +14,56 @@
   text-decoration: none;
   color: var(--ink);
   box-shadow: var(--shadow-card);
-  transition: border-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
-.role-card:hover { border-color: var(--brass); }
-.role-card p { font-size: 0.92rem; color: var(--ink-soft); }
-.role-card ul { padding-left: 1.1rem; margin: 0.75rem 0 1.1rem; font-size: 0.85rem; color: var(--ink-soft); }
-.role-card ul li { margin-bottom: 0.25rem; }
-.role-cta { font-weight: 700; color: var(--brass-dark); font-size: 0.88rem; }
+
+.role-card:hover {
+  border-color: var(--brass);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.role-card p {
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.role-card ul {
+  padding-left: 1.1rem;
+  margin: 0.75rem 0 1.1rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.role-card ul li {
+  margin-bottom: 0.25rem;
+}
+
+.role-cta {
+  font-weight: 700;
+  color: var(--brass-dark);
+  font-size: 0.88rem;
+}
+
+/* Returning users can start a fresh order directly */
+.role-card.new-order {
+  cursor: pointer;
+}
+
+.role-card.new-order .role-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.role-card.new-order .role-cta::after {
+  content: '→';
+  transition: transform 0.15s ease;
+}
+
+.role-card.new-order:hover .role-cta::after {
+  transform: translateX(3px);
+}
