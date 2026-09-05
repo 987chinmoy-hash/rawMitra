@@ -72,6 +72,7 @@ export function initDatabase() {
       status TEXT DEFAULT 'confirmed' CHECK(status IN ('confirmed', 'in_transit', 'delivered', 'cancelled')),
       tracking_stage INTEGER DEFAULT 0,
       validity_snapshot DATE,
+      needed_by DATE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -138,6 +139,22 @@ export function initDatabase() {
     column => column.name === 'current_step'
   )
 
+  const orderColumns = db.prepare(`
+  PRAGMA table_info(orders)
+  `).all()
+
+  const hasNeededBy = orderColumns.some(
+  column => column.name === 'needed_by'
+  )
+
+  if (!hasNeededBy) {
+  db.exec(`
+    ALTER TABLE orders
+    ADD COLUMN needed_by DATE
+    `)
+  }
+
+  
   // Add onboarding_complete if it doesn't already exist
   if (!hasOnboardingComplete) {
     db.exec(`
