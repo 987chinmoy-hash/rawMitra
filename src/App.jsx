@@ -46,26 +46,42 @@ function PageWrapper({ children }) {
 }
 
 /*
- * Automatically sends an already-authenticated user
- * to the correct workflow step.
+ * Determines where an authenticated user should go
+ * when starting a NEW workflow/order.
  *
- * Example:
+ * This is intentionally different from getProgressPath().
  *
- * Artisan:
- * material_requirement -> /artisan/materials
- * group_matching      -> /artisan/matching
- * supplier_offers     -> /artisan/matching
- * deal_selection      -> /artisan/confirm
- * order_confirmation  -> /artisan/confirm
- * delivery_tracking   -> /artisan/tracking
+ * A user's saved current_step belongs to the previous
+ * or unfinished workflow. When the user returns to the
+ * home page and chooses their role again, they should
+ * be able to start a new order without filling in
+ * personal details again.
+ */
+function getNewWorkflowPath(user) {
+  if (!user) return null
+
+  switch (user.role) {
+    case 'artisan':
+      return '/artisan/materials'
+
+    case 'supplier':
+      return '/supplier/pricing'
+
+    case 'coordinator':
+      return '/coordinator/dashboard'
+
+    default:
+      return null
+  }
+}
+
+/*
+ * Determines where an authenticated user should resume
+ * an unfinished workflow.
  *
- * Supplier:
- * supplier_setup      -> /supplier/pricing
- * supplier_dashboard  -> /supplier/dashboard
- *
- * Coordinator:
- * coordinator_setup   -> /coordinator/dashboard
- * coordinator_dashboard -> /coordinator/dashboard
+ * This function is kept available for workflow-resume
+ * logic and can be used when we specifically want to
+ * restore an interrupted order.
  */
 function getProgressPath(user) {
   if (!user) return null
@@ -91,7 +107,7 @@ function getProgressPath(user) {
         return '/artisan/tracking'
 
       case 'completed':
-        return '/artisan/tracking'
+        return '/artisan/materials'
 
       default:
         return '/artisan/materials'
@@ -110,7 +126,7 @@ function getProgressPath(user) {
         return '/supplier/dashboard'
 
       case 'completed':
-        return '/supplier/dashboard'
+        return '/supplier/pricing'
 
       default:
         return '/supplier/pricing'
@@ -125,6 +141,8 @@ function getProgressPath(user) {
       case 'deal_claim':
       case 'coordinator_tracking':
       case 'coordinator_delivery':
+        return '/coordinator/dashboard'
+
       case 'completed':
         return '/coordinator/dashboard'
 
@@ -139,13 +157,32 @@ function getProgressPath(user) {
 /*
  * SessionRedirect
  *
- * This runs when the application starts.
+ * Restores the authenticated user from the JWT.
  *
- * It checks for the JWT and asks the backend for the
- * latest user + workflow progress.
+ * IMPORTANT:
  *
- * This prevents the user from having to enter signup
- * details again on their next visit.
+ * The home/start pages now behave as "start a new workflow"
+ * entry points for existing users.
+ *
+ * Therefore:
+ *
+ * Existing Artisan
+ *      / or /start
+ *          ↓
+ *      /artisan/materials
+ *
+ * Existing Supplier
+ *      / or /start
+ *          ↓
+ *      /supplier/pricing
+ *
+ * Existing Coordinator
+ *      / or /start
+ *          ↓
+ *      /coordinator/dashboard
+ *
+ * The user does NOT get sent back to the previous order's
+ * current_step after completing an order.
  */
 function SessionRedirect() {
   const { authUser } = useAppState()
@@ -162,7 +199,7 @@ function SessionRedirect() {
       const token = api.getToken()
 
       /*
-       * No JWT means this is a normal guest visit.
+       * No JWT means this is a guest visit.
        */
       if (!token) {
         if (active) {
@@ -173,8 +210,8 @@ function SessionRedirect() {
 
       try {
         /*
-         * /api/auth/me verifies the JWT and returns the
-         * latest user information directly from SQLite.
+         * Ask the backend for the latest user information.
+         * This also verifies the JWT.
          */
         const response = await api.auth.getMe()
 
@@ -184,7 +221,7 @@ function SessionRedirect() {
       } catch (err) {
         /*
          * Invalid/expired JWT is handled by api.js.
-         * User can continue as a guest.
+         * The user can continue as a guest.
          */
         console.warn(
           'Session restoration failed:',
@@ -205,11 +242,7 @@ function SessionRedirect() {
   }, [])
 
   /*
-   * While checking the JWT, do not redirect.
-   *
-   * This is important because otherwise the application
-   * could redirect a logged-in user to /start before
-   * /api/auth/me has finished loading.
+   * Do not redirect while the JWT is being checked.
    */
   if (checkingSession) {
     return null
@@ -217,43 +250,78 @@ function SessionRedirect() {
 
   const user = serverUser || authUser
 
+  /*
+   * No authenticated user.
+   * Normal public routing continues.
+   */
   if (!user) {
     return null
   }
 
-  const progressPath = getProgressPath(user)
-
-  if (!progressPath) {
-    return null
-  }
-
   /*
-   * Only automatically redirect from entry/onboarding pages.
+   * These are pages where an authenticated user can
+   * intentionally start a new workflow.
    *
-   * This prevents the user from being forcibly redirected
-   * if they are already inside their workflow.
+   * We do NOT use current_step here.
    */
-  const entryPaths = [
+  const newWorkflowEntryPaths = [
     '/',
     '/start',
-    '/artisan/register',
-    '/supplier/register',
-    '/coordinator/register',
   ]
 
-  if (!entryPaths.includes(location.pathname)) {
-    return null
+  if (newWorkflowEntryPaths.includes(location.pathname)) {
+    const newWorkflowPath = getNewWorkflowPath(user)
+
+    if (newWorkflowPath) {
+      return <Navigate to={newWorkflowPath} replace />
+    }
   }
 
   /*
-   * Existing authenticated user:
+   * If an authenticated user somehow opens their
+   * registration page again, skip registration and
+   * take them directly to their role's starting page.
    *
-   * / -> correct workflow
-   * /start -> correct workflow
-   * /artisan/register -> correct workflow
-   * etc.
+   * This prevents personal details from being requested
+   * again.
    */
-  return <Navigate to={progressPath} replace />
+  if (
+    location.pathname === '/artisan/register' &&
+    user.role === 'artisan'
+  ) {
+    return (
+      <Navigate
+        to="/artisan/materials"
+        replace
+      />
+    )
+  }
+
+  if (
+    location.pathname === '/supplier/register' &&
+    user.role === 'supplier'
+  ) {
+    return (
+      <Navigate
+        to="/supplier/pricing"
+        replace
+      />
+    )
+  }
+
+  if (
+    location.pathname === '/coordinator/register' &&
+    user.role === 'coordinator'
+  ) {
+    return (
+      <Navigate
+        to="/coordinator/dashboard"
+        replace
+      />
+    )
+  }
+
+  return null
 }
 
 export default function App() {
