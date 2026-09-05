@@ -25,12 +25,22 @@ export default function ReviewList({ targetId, targetLabel }) {
       targetId,
       rating: Number(rating),
       review: review.trim(),
+      byId,
+    })
+
+    // Mark the current workflow as fully completed
+    // only after the artisan submits the review.
+    dispatch({
+      type: 'UPDATE_PROGRESS',
+      current_step: 'completed',
+      onboarding_complete: true,
     })
 
     setSubmitted(true)
     setReview('')
 
-    // Automatically navigate back to main page after 2 seconds
+    // Give the artisan time to see the Thank You screen
+    // before returning to Home.
     setTimeout(() => {
       navigate('/')
     }, 2000)
@@ -52,13 +62,27 @@ export default function ReviewList({ targetId, targetLabel }) {
         {entries.map((r, i) => (
           <div key={i} className="card" style={{ padding: '0.9rem 1.1rem' }}>
             <RatingStars value={r.rating} />
+
             {r.review && (
               <p style={{ margin: '0.4rem 0 0', fontSize: '0.9rem' }}>
                 {r.review}
               </p>
             )}
-            <span className="field-hint" style={{ display: 'block', marginTop: '0.3rem', fontSize: '0.75rem' }}>
-              ✓ Verified Artisan Review · {new Date(r.date || Date.now()).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
+
+            <span
+              className="field-hint"
+              style={{
+                display: 'block',
+                marginTop: '0.3rem',
+                fontSize: '0.75rem',
+              }}
+            >
+              ✓ Verified Artisan Review ·{' '}
+              {new Date(r.date || Date.now()).toLocaleDateString('en-IN', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
             </span>
           </div>
         ))}
@@ -76,10 +100,20 @@ export default function ReviewList({ targetId, targetLabel }) {
             animation: 'fadeIn 0.3s ease-out',
           }}
         >
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.4rem' }}>🎉</div>
-          <h3 style={{ margin: '0 0 0.4rem', color: '#166534', fontSize: '1.25rem' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.4rem' }}>
+            🎉
+          </div>
+
+          <h3
+            style={{
+              margin: '0 0 0.4rem',
+              color: '#166534',
+              fontSize: '1.25rem',
+            }}
+          >
             Thank You, {artisan?.name || 'Artisan'}!
           </h3>
+
           <p
             style={{
               margin: '0 auto 1rem',
@@ -89,52 +123,111 @@ export default function ReviewList({ targetId, targetLabel }) {
               lineHeight: '1.5',
             }}
           >
-            Your verified review for <strong>{targetLabel || 'the supplier'}</strong> has been successfully recorded.
-            Your feedback protects fellow artisans, promotes transparent pricing, and strengthens our cluster!
+            Your verified review for{' '}
+            <strong>{targetLabel || 'the supplier'}</strong> has been
+            successfully recorded. Your feedback protects fellow artisans,
+            promotes transparent pricing, and strengthens our cluster!
           </p>
-          <div style={{ fontSize: '0.88rem', color: '#047857', fontWeight: 600, marginTop: '0.5rem' }}>
+
+          <div
+            style={{
+              fontSize: '0.88rem',
+              color: '#047857',
+              fontWeight: 600,
+              marginTop: '0.5rem',
+            }}
+          >
             ⏳ Returning to main page in 2 seconds...
           </div>
         </div>
       ) : (
-        <form onSubmit={submit} className="card" style={{ padding: '1.2rem' }}>
-          <h4 style={{ margin: '0 0 0.85rem', fontSize: '1rem' }}>
+        <form
+          onSubmit={submit}
+          className="card"
+          style={{ padding: '1.2rem' }}
+        >
+          <h4
+            style={{
+              margin: '0 0 0.85rem',
+              fontSize: '1rem',
+            }}
+          >
             Leave a Review for {targetLabel || 'Supplier'}
           </h4>
 
-          <div className="field" style={{ marginBottom: '0.85rem' }}>
-            <label htmlFor="rating" style={{ fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>
+          <div
+            className="field"
+            style={{ marginBottom: '0.85rem' }}
+          >
+            <label
+              htmlFor="rating"
+              style={{
+                fontWeight: 600,
+                display: 'block',
+                marginBottom: '0.3rem',
+              }}
+            >
               Your rating
             </label>
+
             <select
               id="rating"
               value={rating}
               onChange={(e) => setRating(e.target.value)}
-              style={{ width: '100%', maxWidth: '200px', padding: '0.45rem 0.6rem', borderRadius: '6px' }}
+              style={{
+                width: '100%',
+                maxWidth: '200px',
+                padding: '0.45rem 0.6rem',
+                borderRadius: '6px',
+              }}
             >
               {[5, 4, 3, 2, 1].map((n) => (
                 <option key={n} value={n}>
-                  {n} star{n > 1 ? 's' : ''} {n === 5 ? '★ (Excellent)' : n === 4 ? '★ (Good)' : ''}
+                  {n} star{n > 1 ? 's' : ''}{' '}
+                  {n === 5
+                    ? '★ (Excellent)'
+                    : n === 4
+                      ? '★ (Good)'
+                      : ''}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="field" style={{ marginBottom: '1rem' }}>
-            <label htmlFor="review" style={{ fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>
+          <div
+            className="field"
+            style={{ marginBottom: '1rem' }}
+          >
+            <label
+              htmlFor="review"
+              style={{
+                fontWeight: 600,
+                display: 'block',
+                marginBottom: '0.3rem',
+              }}
+            >
               Review notes (optional)
             </label>
+
             <textarea
               id="review"
               rows={3}
               value={review}
               onChange={(e) => setReview(e.target.value)}
               placeholder="How was the material quality, pricing fairness, or delivery timeliness?"
-              style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid var(--line, #cbd5e1)' }}
+              style={{
+                width: '100%',
+                padding: '0.6rem',
+                borderRadius: '6px',
+                border: '1px solid var(--line, #cbd5e1)',
+              }}
             />
           </div>
 
-          <button type="submit" className="btn btn-brass">
+          <button
+            type="submit"
+            className="btn btn-brass"
+          >
             ⭐ Submit Review &amp; Complete Order
           </button>
         </form>
