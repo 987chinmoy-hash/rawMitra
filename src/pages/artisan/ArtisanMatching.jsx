@@ -202,6 +202,9 @@ export default function ArtisanMatching() {
         specification: chosenPlan?.supplier?.specification || req.specification,
         quantity: req.quantity,
         unit: req.unit,
+
+        neededBy: req.requiredDate,
+        
         chosenPlanId: chosenPlan?.id || 'choice-mega-bulk',
         chosenPlanTitle: chosenPlan?.title || 'District Mega-Bulk Tier',
         chosenPlanBadge: chosenPlan?.badge || '🏆 Maximum Savings',
@@ -253,6 +256,9 @@ export default function ArtisanMatching() {
       isBatch: isMultiItem,
       itemsCount: batchItems.length,
       items: batchItems,
+
+      neededBy: batchItems[0]?.neededBy || currentReq?.requiredDate,
+
       // Aggregated fields for display and backwards compatibility:
       category: isMultiItem
         ? batchItems.map((it) => it.category).join(', ')
