@@ -10,7 +10,49 @@ export const TRANSLATIONS = {
     portalTitle: 'Shared Raw Material Procurement & Cost Coordination Portal',
     searchPlaceholder: 'Search by material, name or location (≥ 2 fields)...',
     priceOutlook: 'Price outlook',
-    guidebook: 'Guidebook',
+    //
+    guidetitle: 'Guidebook',
+    guideSubtitle: 'A short walkthrough for each role on rawMitra.',
+
+    guideArtisan: 'Artisan',
+    guideSupplier: 'Supplier',
+    guideCoordinator: 'Coordinator',
+
+    guideSteps: 'Steps',
+    guideTips: 'Tips',
+
+    guideArtisanIntro: 'How to source materials as part of a group, at a bulk price you would not get alone.',
+    guideArtisanStep1: 'Register with your name, Aadhar, store location and phone number — this verifies you to suppliers and other artisans.',
+    guideArtisanStep2: 'List each material you need with a clear specification, quantity, unit, your location and the date you need it by.',
+    guideArtisanStep3: 'rawMitra groups your request with nearby artisans who need the same material. Review the combined quantity and the supplier offers ranked by price, quality rating and distance.',
+    guideArtisanStep4: 'Use the live cost calculator to see exactly your share before confirming.',
+    guideArtisanStep5: 'If no supplier currently matches, broadcast a request — other artisans with the same need can join you, and you will be grouped and shown offers automatically once matched.',
+    guideArtisanStep6: 'After confirming, track pickup and shipment from your dashboard. Rate the supplier once your order is delivered.',
+
+    guideArtisanTip1: 'Larger, clearly-specified requests attract more supplier interest.',
+    guideArtisanTip2: 'Keep your required date realistic — tight timelines reduce your matching pool.',
+
+    guideSupplierIntro: 'How to reach grouped bulk orders instead of selling to artisans one at a time.',
+    guideSupplierStep1: 'Register your business with name, Aadhar, store location, phone number and the materials you stock (specification, quantity, unit).',
+    guideSupplierStep2: 'Set your bulk price per material and the minimum quantity that price applies to.',
+    guideSupplierStep3: 'Tell rawMitra whether you can arrange shipment or pickup yourself, or need a coordinator.',
+    guideSupplierStep4: 'When an artisan group selects your offer and confirms, you will see the order and the coordinator (if any) assigned.',
+    guideSupplierStep5: 'Build your rating by delivering the agreed quality and quantity on time.',
+
+    guideSupplierTip1: 'A competitive price and a nearby location both improve your ranking in artisan groups\' matching results.',
+    guideSupplierTip2: 'A higher rating outweighs a slightly higher price for many groups — quality and reliability matter.',
+
+    guideCoordinatorIntro: 'How to take on and manage a confirmed deal from pickup or shipment through to delivery.',
+    guideCoordinatorStep1: 'Register with your name, Aadhar, phone number and previous logistics experience.',
+    guideCoordinatorStep2: 'From your dashboard, claim deals that need a coordinator where the supplier selected no logistics.',
+    guideCoordinatorStep3: 'Update the tracking stage as the order moves: collected, in transit, out for delivery, delivered.',
+    guideCoordinatorStep4: 'Keep artisans and the supplier informed — accurate tracking status is a rated part of your service.',
+    guideCoordinatorStep5: 'Build your track record; a strong rating helps you get chosen for larger or higher-value deals.',
+
+    guideCoordinatorTip1: 'Update tracking stages promptly — artisans see this in real time on their own dashboard.',
+    
+
+    //
     getStarted: 'Get started',
     switchRole: 'Switch role',
     logIn: 'Log in',
@@ -217,7 +259,48 @@ export const TRANSLATIONS = {
     portalTitle: 'साझा कच्चा माल खरीद एवं लागत समन्वय पोर्टल',
     searchPlaceholder: 'सामग्री, नाम या स्थान से खोजें (कम से कम 2 फ़ील्ड)...',
     priceOutlook: 'मूल्य रुझान (3-4 दिन)',
-    guidebook: 'मार्गदर्शिका',
+    //
+    guideTitle: 'मार्गदर्शिका',
+    guideSubtitle: 'rawMitra पर प्रत्येक भूमिका के लिए एक संक्षिप्त मार्गदर्शिका।',
+
+    guideArtisan: 'कारीगर',
+    guideSupplier: 'आपूर्तिकर्ता',
+    guideCoordinator: 'समन्वयक',
+
+    guideSteps: 'चरण',
+    guideTips: 'सुझाव',
+
+    guideArtisanIntro: 'समूह के रूप में सामग्री कैसे प्राप्त करें और वह थोक कीमत पाएं जो अकेले खरीदने पर नहीं मिलती।',
+    guideArtisanStep1: 'अपने नाम, आधार, दुकान का स्थान और फोन नंबर के साथ पंजीकरण करें। इससे आपूर्तिकर्ताओं और अन्य कारीगरों के लिए आपका सत्यापन होता है।',
+    guideArtisanStep2: 'आपको आवश्यक प्रत्येक सामग्री की स्पष्ट जानकारी, मात्रा, इकाई, स्थान और आवश्यक तारीख के साथ सूची बनाएं।',
+    guideArtisanStep3: 'rawMitra आपके अनुरोध को उन नजदीकी कारीगरों के साथ समूहित करता है जिन्हें वही सामग्री चाहिए। संयुक्त मात्रा और कीमत, रेटिंग तथा दूरी के आधार पर आपूर्तिकर्ताओं के प्रस्ताव देखें।',
+    guideArtisanStep4: 'पुष्टि करने से पहले लाइव लागत कैलकुलेटर से अपना वास्तविक हिस्सा देखें।',
+    guideArtisanStep5: 'यदि कोई आपूर्तिकर्ता उपलब्ध नहीं है, तो अनुरोध प्रसारित करें। समान आवश्यकता वाले अन्य कारीगर आपके साथ जुड़ सकते हैं।',
+    guideArtisanStep6: 'पुष्टि के बाद अपने डैशबोर्ड से पिकअप और शिपमेंट को ट्रैक करें। डिलीवरी के बाद आपूर्तिकर्ता को रेटिंग दें।',
+
+    guideArtisanTip1: 'बड़ी और स्पष्ट रूप से निर्दिष्ट मांगें अधिक आपूर्तिकर्ताओं को आकर्षित करती हैं।',
+    guideArtisanTip2: 'अपनी आवश्यक तारीख वास्तविक रखें — बहुत कम समय मिलने से आपके मैच कम हो सकते हैं।',
+
+    guideSupplierIntro: 'कारीगरों को एक-एक करके बेचने के बजाय समूहित थोक ऑर्डर तक कैसे पहुंचें।',
+    guideSupplierStep1: 'अपने व्यवसाय के नाम, आधार, दुकान के स्थान, फोन नंबर और उपलब्ध सामग्री के साथ पंजीकरण करें।',
+    guideSupplierStep2: 'प्रत्येक सामग्री की थोक कीमत और उस कीमत पर लागू न्यूनतम मात्रा निर्धारित करें।',
+    guideSupplierStep3: 'rawMitra को बताएं कि आप स्वयं शिपमेंट या पिकअप की व्यवस्था कर सकते हैं या आपको समन्वयक की आवश्यकता है।',
+    guideSupplierStep4: 'जब कोई कारीगर समूह आपके प्रस्ताव को चुनकर पुष्टि करता है, तो आपको ऑर्डर और नियुक्त समन्वयक दिखाई देगा।',
+    guideSupplierStep5: 'सहमति के अनुसार गुणवत्ता और मात्रा समय पर देकर अपनी रेटिंग बनाएं।',
+
+    guideSupplierTip1: 'प्रतिस्पर्धी कीमत और नजदीकी स्थान कारीगर समूहों के मैचिंग परिणामों में आपकी रैंकिंग सुधारते हैं।',
+    guideSupplierTip2: 'कई समूहों के लिए थोड़ी अधिक कीमत की तुलना में बेहतर रेटिंग अधिक महत्वपूर्ण होती है।',
+
+    guideCoordinatorIntro: 'पिकअप या शिपमेंट से लेकर डिलीवरी तक पुष्टि किए गए सौदे को कैसे संभालें और प्रबंधित करें।',
+    guideCoordinatorStep1: 'अपने नाम, आधार, फोन नंबर और पिछले लॉजिस्टिक्स अनुभव के साथ पंजीकरण करें।',
+    guideCoordinatorStep2: 'अपने डैशबोर्ड से उन सौदों को चुनें जिन्हें समन्वयक की आवश्यकता है।',
+    guideCoordinatorStep3: 'ऑर्डर आगे बढ़ने पर ट्रैकिंग चरण अपडेट करें: एकत्रित, रास्ते में, डिलीवरी के लिए निकला, वितरित।',
+    guideCoordinatorStep4: 'कारीगरों और आपूर्तिकर्ता को जानकारी देते रहें — सही ट्रैकिंग आपकी सेवा का महत्वपूर्ण हिस्सा है।',
+    guideCoordinatorStep5: 'अपना रिकॉर्ड बनाएं; अच्छी रेटिंग आपको बड़े या अधिक मूल्य वाले सौदों के लिए चुने जाने में मदद करती है।',
+
+    guideCoordinatorTip1: 'ट्रैकिंग चरण तुरंत अपडेट करें — कारीगर इसे अपने डैशबोर्ड पर वास्तविक समय में देखते हैं।',
+
+    //
     getStarted: 'शुरू करें',
     switchRole: 'भूमिका बदलें',
     logIn: 'लॉग इन',
@@ -425,7 +508,48 @@ export const TRANSLATIONS = {
     portalTitle: 'উমৈহতীয়া কেঁচামাল ক্ৰয় আৰু ব্যয় সমন্বয় পৰ্টেল',
     searchPlaceholder: 'সামগ্ৰী, নাম বা স্থান অনুসৰি সন্ধান কৰক...',
     priceOutlook: 'মূল্যৰ পূৰ্বাভাস (৩-৪ দিন)',
-    guidebook: 'নিৰ্দেশিকা',
+    //
+    guideTitle: 'নিৰ্দেশিকা',
+    guideSubtitle: 'rawMitra-ৰ প্ৰতিটো ভূমিকাৰ বাবে এখন চমু নিৰ্দেশিকা।',
+
+    guideArtisan: 'কাৰিকৰ',
+    guideSupplier: 'যোগানকাৰী',
+    guideCoordinator: 'সমন্বয়ক',
+
+    guideSteps: 'পদক্ষেপ',
+    guideTips: 'পৰামৰ্শ',
+
+    guideArtisanIntro: 'এটা গোটৰ অংশ হিচাপে সামগ্ৰী কেনেকৈ সংগ্ৰহ কৰিব আৰু অকলে ক্ৰয় কৰিলে নোপোৱা থোক মূল্য কেনেকৈ লাভ কৰিব।',
+    guideArtisanStep1: 'আপোনাৰ নাম, আধাৰ, দোকানৰ স্থান আৰু ফোন নম্বৰেৰে পঞ্জীয়ন কৰক। ইয়াৰ দ্বাৰা যোগানকাৰী আৰু আন কাৰিকৰৰ বাবে আপোনাৰ পৰিচয় নিশ্চিত হয়।',
+    guideArtisanStep2: 'আপোনাৰ প্ৰয়োজনীয় প্ৰতিটো সামগ্ৰী স্পষ্ট বিৱৰণ, পৰিমাণ, একক, স্থান আৰু প্ৰয়োজনীয় তাৰিখৰ সৈতে তালিকাভুক্ত কৰক।',
+    guideArtisanStep3: 'rawMitra-ই আপোনাৰ অনুৰোধক একে সামগ্ৰী বিচৰা ওচৰৰ কাৰিকৰসকলৰ সৈতে গোট কৰে। মুঠ পৰিমাণ আৰু মূল্য, ৰেটিং আৰু দূৰত্বৰ ভিত্তিত যোগানকাৰীৰ প্ৰস্তাৱসমূহ পৰীক্ষা কৰক।',
+    guideArtisanStep4: 'নিশ্চিত কৰাৰ আগতে লাইভ খৰচ কেলকুলেটৰৰ সহায়ত আপোনাৰ সঠিক অংশ চাওক।',
+    guideArtisanStep5: 'যদি কোনো যোগানকাৰী নাথাকে, তেন্তে এটা অনুৰোধ সম্প্ৰচাৰ কৰক। একে প্ৰয়োজন থকা আন কাৰিকৰ আপোনাৰ সৈতে যোগদান কৰিব পাৰে।',
+    guideArtisanStep6: 'নিশ্চিত কৰাৰ পিছত আপোনাৰ ডেশ্ববৰ্ডৰ পৰা পিকআপ আৰু শিপমেণ্ট ট্ৰেক কৰক। অৰ্ডাৰ ডেলিভাৰী হোৱাৰ পিছত যোগানকাৰীক ৰেটিং দিয়ক।',
+
+    guideArtisanTip1: 'ডাঙৰ আৰু স্পষ্টভাৱে উল্লেখ কৰা অনুৰোধে অধিক যোগানকাৰীৰ আগ্ৰহ আকৰ্ষণ কৰে।',
+    guideArtisanTip2: 'প্ৰয়োজনীয় তাৰিখ বাস্তৱসন্মত ৰাখক — কম সময়ে আপোনাৰ মিল পোৱাৰ সুযোগ হ্ৰাস কৰে।',
+
+    guideSupplierIntro: 'কাৰিকৰসকলক এজন এজনকৈ বিক্ৰী কৰাৰ পৰিৱৰ্তে গোট খোৱা থোক অৰ্ডাৰ কেনেকৈ লাভ কৰিব।',
+    guideSupplierStep1: 'আপোনাৰ ব্যৱসায়ৰ নাম, আধাৰ, দোকানৰ স্থান, ফোন নম্বৰ আৰু মজুত থকা সামগ্ৰীৰ সৈতে পঞ্জীয়ন কৰক।',
+    guideSupplierStep2: 'প্ৰতিটো সামগ্ৰীৰ থোক মূল্য আৰু সেই মূল্যত প্ৰযোজ্য ন্যূনতম পৰিমাণ নিৰ্ধাৰণ কৰক।',
+    guideSupplierStep3: 'আপুনি নিজে শিপমেণ্ট বা পিকআপৰ ব্যৱস্থা কৰিব পাৰে নে সমন্বয়কৰ প্ৰয়োজন সেই কথা rawMitra-ক জনাওক।',
+    guideSupplierStep4: 'যেতিয়া কোনো কাৰিকৰ গোটে আপোনাৰ প্ৰস্তাৱ বাছি লৈ নিশ্চিত কৰে, তেতিয়া আপুনি অৰ্ডাৰ আৰু নিযুক্ত সমন্বয়কক দেখিব।',
+    guideSupplierStep5: 'সন্মত মান আৰু পৰিমাণ সময়মতে প্ৰদান কৰি আপোনাৰ ৰেটিং উন্নত কৰক।',
+
+    guideSupplierTip1: 'প্ৰতিযোগিতামূলক মূল্য আৰু ওচৰৰ স্থান দুয়োটাই কাৰিকৰ গোটৰ মিলৰ ফলাফলত আপোনাৰ ৰেংকিং উন্নত কৰে।',
+    guideSupplierTip2: 'বহু গোটৰ বাবে অলপ বেছি মূল্যতকৈ ভাল ৰেটিং অধিক গুৰুত্বপূৰ্ণ।',
+
+    guideCoordinatorIntro: 'পিকআপ বা শিপমেণ্টৰ পৰা ডেলিভাৰীলৈকে নিশ্চিত হোৱা এটা চুক্তি কেনেকৈ পৰিচালনা কৰিব।',
+    guideCoordinatorStep1: 'আপোনাৰ নাম, আধাৰ, ফোন নম্বৰ আৰু পূৰ্বৰ লজিষ্টিক্স অভিজ্ঞতাৰ সৈতে পঞ্জীয়ন কৰক।',
+    guideCoordinatorStep2: 'আপোনাৰ ডেশ্বব\'ৰ্ডৰ পৰা সমন্বয়কৰ প্ৰয়োজন হোৱা চুক্তিসমূহ বাছি লওক।',
+    guideCoordinatorStep3: 'অৰ্ডাৰ আগবঢ়াৰ লগে লগে ট্ৰেকিং পৰ্যায় আপডেট কৰক: সংগ্ৰহ কৰা, যাত্ৰাত, ডেলিভাৰীৰ বাবে ওলাইছে, ডেলিভাৰী কৰা হৈছে।',
+    guideCoordinatorStep4: 'কাৰিকৰ আৰু যোগানকাৰীক তথ্য দি থাকক — সঠিক ট্ৰেকিং আপোনাৰ সেৱাৰ এটা গুৰুত্বপূৰ্ণ অংশ।',
+    guideCoordinatorStep5: 'আপোনাৰ ৰেকৰ্ড গঢ়ি তোলক; ভাল ৰেটিঙে আপোনাক ডাঙৰ বা অধিক মূল্যৰ চুক্তিৰ বাবে নিৰ্বাচিত হোৱাত সহায় কৰে।',
+
+    guideCoordinatorTip1: 'ট্ৰেকিং পৰ্যায়সমূহ সময়মতে আপডেট কৰক — কাৰিকৰসকলে নিজৰ ডেশ্বব\'ৰ্ডত এই তথ্য বাস্তৱ সময়ত দেখে।',
+
+    //
     getStarted: 'আৰম্ভ কৰক',
     switchRole: 'ভূমিকা সলনি কৰক',
     logIn: 'লগ ইন',
