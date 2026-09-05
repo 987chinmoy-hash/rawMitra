@@ -17,6 +17,7 @@ export function createOrder(req, res) {
       pricePerUnit,
       transportCharge,
       validity,
+      neededBy,
       perArtisan,
     } = req.body
 
