@@ -117,7 +117,21 @@ export function initDatabase() {
       review_text TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS otps (
+      target TEXT PRIMARY KEY,
+      otp TEXT NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('phone', 'email')),
+      expires_at DATETIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `)
+
+  try {
+    db.exec('ALTER TABLE users ADD COLUMN email TEXT;')
+  } catch (e) {
+    // Column already exists
+  }
 }
 
 export default db

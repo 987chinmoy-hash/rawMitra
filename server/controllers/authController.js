@@ -266,3 +266,138 @@ export function bootstrap(req, res) {
     return res.status(500).json({ error: 'Failed to retrieve database state.' })
   }
 }
+
+export function sendOtp(req, res) {
+  try {
+    const { target: rawTarget, type = 'phone' } = req.body
+    if (!rawTarget) {
+      return res.status(400).json({ error: 'Target phone or email is required.' })
+    }
+
+    const cleanTarget = type === 'phone' ? cleanPhone(rawTarget) : rawTarget.trim().toLowerCase()
+    if (type === 'phone' && cleanTarget.length !== 10) {
+      return res.status(400).json({ error: 'Enter a valid 10-digit mobile number.' })
+    }
+    if (type === 'email' && !cleanTarget.includes('@')) {
+      return res.status(400).json({ error: 'Enter a valid email address.' })
+    }
+
+    // Generate realistic 4-digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000).toString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+
+    db.prepare(`
+      INSERT INTO otps (target, otp, type, expires_at)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(target) DO UPDATE SET otp = excluded.otp, expires_at = excluded.expires_at, created_at = CURRENT_TIMESTAMP
+    `).run(cleanTarget, otp, type, expiresAt)
+
+    let existingUser = null
+    if (type === 'phone') {
+      existingUser = db.prepare('SELECT id, name, role FROM users WHERE phone = ?').get(cleanTarget)
+    } else {
+      existingUser = db.prepare('SELECT id, name, role FROM users WHERE email = ?').get(cleanTarget)
+    }
+
+    return res.json({
+      success: true,
+      message: `OTP sent to ${cleanTarget}`,
+      target: cleanTarget,
+      type,
+      demoOtp: otp,
+      isExisting: Boolean(existingUser),
+      user: existingUser || null,
+    })
+  } catch (err) {
+    console.error('Send OTP error:', err)
+    return res.status(500).json({ error: 'Failed to dispatch OTP.' })
+  }
+}
+
+export function verifyOtp(req, res) {
+  try {
+    const { target: rawTarget, otp, role = 'artisan', name, aadhar, locationOrExp } = req.body
+    if (!rawTarget || !otp) {
+      return res.status(400).json({ error: 'Target and OTP are required.' })
+    }
+
+    const isEmail = rawTarget.toString().includes('@')
+    const cleanTarget = isEmail ? rawTarget.trim().toLowerCase() : cleanPhone(rawTarget)
+
+    const storedOtp = db.prepare('SELECT * FROM otps WHERE target = ?').get(cleanTarget)
+    
+    // In demo mode: accept either exact stored OTP OR standard demo OTP '4821' or '1234' or any 4 digits
+    const isValidOtp = (storedOtp && storedOtp.otp === otp.trim()) || otp.trim() === '4821' || otp.trim() === '1234' || (otp.trim().length === 4 && /^\d{4}$/.test(otp.trim()))
+    if (!isValidOtp) {
+      return res.status(400).json({ error: 'Invalid or expired OTP. Please try again.' })
+    }
+
+    let user = null
+    if (isEmail) {
+      user = db.prepare('SELECT * FROM users WHERE email = ?').get(cleanTarget)
+    } else {
+      user = db.prepare('SELECT * FROM users WHERE phone = ?').get(cleanTarget)
+    }
+
+    if (!user) {
+      const defaultName = name?.trim() || (isEmail ? cleanTarget.split('@')[0] : `Artisan ${cleanTarget.slice(-4)}`)
+      const prefix = role === 'artisan' ? 'A' : role === 'supplier' ? 'S' : 'C'
+      const id = genId(prefix)
+      const aadharDigits = (aadhar && aadhar.replace(/\D/g, '').length === 12) ? aadhar.replace(/\D/g, '') : `12345678${Math.floor(1000 + Math.random() * 9000)}`
+      const identityHash = generateIdentityHash(aadharDigits)
+      const masked = maskAadhaar(aadharDigits)
+      const passwordHash = bcrypt.hashSync('demo_otp_login', 8)
+      const phone = isEmail ? `9864${Math.floor(100000 + Math.random() * 900000)}` : cleanTarget
+      const email = isEmail ? cleanTarget : null
+
+      db.prepare(`
+        INSERT INTO users (id, role, name, phone, email, password_hash, identity_hash, aadhar_masked, store_location, experience, rating, reviews_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 5.0, 1)
+      `).run(
+        id,
+        role,
+        defaultName,
+        phone,
+        email,
+        passwordHash,
+        identityHash,
+        masked,
+        role !== 'coordinator' ? (locationOrExp || 'Sualkuchi, Assam') : null,
+        role === 'coordinator' ? (locationOrExp || 'Handloom and craft logistics coordinator') : null
+      )
+
+      user = db.prepare('SELECT * FROM users WHERE id = ?').get(id)
+    }
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role, name: user.name, phone: user.phone, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    )
+
+    db.prepare('DELETE FROM otps WHERE target = ?').run(cleanTarget)
+
+    return res.json({
+      success: true,
+      message: 'Authentication successful.',
+      token,
+      user: {
+        id: user.id,
+        role: user.role,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        aadhar_masked: user.aadhar_masked,
+        storeLocation: user.store_location,
+        experience: user.experience,
+        rating: user.rating,
+        reviewsCount: user.reviews_count,
+        isSuspended: Boolean(user.is_suspended),
+      },
+    })
+  } catch (err) {
+    console.error('Verify OTP error:', err)
+    return res.status(500).json({ error: 'Failed to verify OTP and authenticate.' })
+  }
+}
+

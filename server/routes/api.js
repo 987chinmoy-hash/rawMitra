@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { register, login, me, bootstrap } from '../controllers/authController.js'
+import { register, login, me, bootstrap, sendOtp, verifyOtp } from '../controllers/authController.js'
 import { addRequests, withdrawRequest, addSupplierStock, getMyStock } from '../controllers/materialController.js'
 import { createOrder, claimDeal, advanceStage, cancelOrder, addReview } from '../controllers/orderController.js'
 import { addBroadcast } from '../controllers/broadcastController.js'
@@ -12,6 +12,8 @@ const router = Router()
 // Public Auth & Bootstrap
 router.post('/auth/register', register)
 router.post('/auth/login', login)
+router.post('/auth/send-otp', sendOtp)
+router.post('/auth/verify-otp', verifyOtp)
 router.get('/auth/me', requireAuth, me)
 router.get('/bootstrap', bootstrap)
 
