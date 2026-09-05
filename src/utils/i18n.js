@@ -163,7 +163,7 @@ export const TRANSLATIONS = {
     stage4: 'Out for delivery',
     stage5: 'Delivered',
     currentStageBadge: 'Current stage',
-    btnAdvanceStage: 'Advance to next stage (demo)',
+    btnAdvanceStage: 'Advance to next stage ',
     btnCancelOrder: 'Cancel order (10% penalty applies)',
 
     // Demand Forecast
@@ -370,7 +370,7 @@ export const TRANSLATIONS = {
     stage4: 'वितरण के लिए निकला',
     stage5: 'कारीगरों तक पहुँचाया गया',
     currentStageBadge: 'वर्तमान चरण',
-    btnAdvanceStage: 'अगले चरण पर जाएं (डेमो)',
+    btnAdvanceStage: 'अगले चरण पर जाएं ',
     btnCancelOrder: 'ऑर्डर रद्द करें (10% जुर्माना लागू)',
 
     // Demand Forecast
@@ -578,7 +578,7 @@ export const TRANSLATIONS = {
     stage4: 'ডেলিভাৰীৰ বাবে ওলাইছে',
     stage5: 'কাৰিকৰসকলক অৰ্পণ কৰা হ\'ল',
     currentStageBadge: 'বৰ্তমান পৰ্য্যায়',
-    btnAdvanceStage: 'পৰৱৰ্তী পৰ্য্যায়লৈ যাওক (ডেমো)',
+    btnAdvanceStage: 'পৰৱৰ্তী পৰ্য্যায়লৈ যাওক ',
     btnCancelOrder: 'অৰ্ডাৰ বাতিল কৰক (১০% জৰিমনা হ\'ব)',
 
     // Demand Forecast
