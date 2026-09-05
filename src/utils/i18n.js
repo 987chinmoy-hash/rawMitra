@@ -29,7 +29,7 @@ export const TRANSLATIONS = {
     stepCoordDash: 'Dashboard',
 
     // Welcome Hero & Steps
-    welcomeHeroBadge: '',
+    
     welcomeHeroTitle: 'Welcome to rawMitra.',
     welcomeHeroSub: 'Small artisans working with bamboo, yarn, clay, dyes, metal or packaging materials rarely get bulk prices alone. rawMitra groups nearby artisans who need the same materials, connects them to suppliers for a fair bulk rate, and calculates each person\'s material cost and fair transport share — start to finish.',
     enterBtn: 'Enter rawMitra',
@@ -236,8 +236,8 @@ export const TRANSLATIONS = {
     stepCoordDash: 'डैशबोर्ड',
 
     // Welcome Hero & Steps
-    welcomeHeroBadge: '',
-    welcomeHeroTitle: 'rawMitra में आपका स्वागत है।',
+    
+    welcomeHeroTitle: ' rawMitra में आपका स्वागत है।',
     welcomeHeroSub: 'बांस, धागा, मिट्टी, रंग, धातु या पैकेजिंग सामग्री के साथ काम करने वाले छोटे कारीगरों को अकेले थोक मूल्य नहीं मिल पाता। rawMitra पास के कारीगरों को एक साथ लाता है, थोक दर पर आपूर्तिकर्ताओं से जोड़ता है, और उचित सामग्री लागत और परिवहन हिस्से की गणना करता है।',
     enterBtn: 'rawMitra में प्रवेश करें',
     readGuideBtn: 'मार्गदर्शिका पढ़ें',
@@ -444,7 +444,7 @@ export const TRANSLATIONS = {
     stepCoordDash: 'ডেশ্ববৰ্ড',
 
     // Welcome Hero & Steps
-    welcomeHeroBadge: '',
+    
     welcomeHeroTitle: 'rawMitra লৈ স্বাগতম।',
     welcomeHeroSub: 'বাঁহ, সূতা, মাটি, ৰং, ধাতু বা পেকেজিং সামগ্ৰীৰ কাম কৰা ক্ষুদ্ৰ শিপিনী আৰু কাৰিকৰসকলে অকলশৰে পাইকাৰী দৰ নাপায়। rawMitra-ই ওচৰৰ কাৰিকৰসকলক একেলগ কৰে, পাইকাৰী দৰত যোগানকাৰীৰ লগত সংযোগ কৰে আৰু পৰিবহণ ব্যয় সমভাৱে ভাগ কৰে।',
     enterBtn: 'rawMitra ত প্ৰৱেশ কৰক',
