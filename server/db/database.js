@@ -26,6 +26,10 @@ export function initDatabase() {
       rating REAL DEFAULT 5.0,
       reviews_count INTEGER DEFAULT 0,
       is_suspended INTEGER DEFAULT 0,
+
+      onboarding_complete INTEGER DEFAULT 0,
+      current_step TEXT DEFAULT 'material_requirement',
+      
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
