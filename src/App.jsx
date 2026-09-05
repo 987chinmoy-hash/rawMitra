@@ -1,5 +1,6 @@
-import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
+
 import NavBar from './components/NavBar.jsx'
 import Welcome from './pages/Welcome.jsx'
 import RoleSelect from './pages/RoleSelect.jsx'
@@ -22,9 +23,12 @@ import CoordinatorRegister from './pages/coordinator/CoordinatorRegister.jsx'
 import CoordinatorDashboard from './pages/coordinator/CoordinatorDashboard.jsx'
 
 import BroadcastPopup from './components/BroadcastPopup.jsx'
+
 import { useAppState } from './context/AppContext.jsx'
 import { api } from './services/api.js'
+
 import './App.css'
+
 
 function PageWrapper({ children }) {
   const ref = useRef(null)
@@ -45,148 +49,39 @@ function PageWrapper({ children }) {
   )
 }
 
-/*
- * Determines where an authenticated user should go
- * when starting a NEW workflow/order.
- *
- * This is intentionally different from getProgressPath().
- *
- * A user's saved current_step belongs to the previous
- * or unfinished workflow. When the user returns to the
- * home page and chooses their role again, they should
- * be able to start a new order without filling in
- * personal details again.
- */
-function getNewWorkflowPath(user) {
-  if (!user) return null
-
-  switch (user.role) {
-    case 'artisan':
-      return '/artisan/materials'
-
-    case 'supplier':
-      return '/supplier/pricing'
-
-    case 'coordinator':
-      return '/coordinator/dashboard'
-
-    default:
-      return null
-  }
-}
-
-/*
- * Determines where an authenticated user should resume
- * an unfinished workflow.
- *
- * This function is kept available for workflow-resume
- * logic and can be used when we specifically want to
- * restore an interrupted order.
- */
-function getProgressPath(user) {
-  if (!user) return null
-
-  const role = user.role
-  const step = user.current_step || 'role_setup'
-
-  if (role === 'artisan') {
-    switch (step) {
-      case 'role_setup':
-      case 'material_requirement':
-        return '/artisan/materials'
-
-      case 'group_matching':
-      case 'supplier_offers':
-        return '/artisan/matching'
-
-      case 'deal_selection':
-      case 'order_confirmation':
-        return '/artisan/confirm'
-
-      case 'delivery_tracking':
-        return '/artisan/tracking'
-
-      case 'completed':
-        return '/artisan/materials'
-
-      default:
-        return '/artisan/materials'
-    }
-  }
-
-  if (role === 'supplier') {
-    switch (step) {
-      case 'role_setup':
-      case 'supplier_setup':
-      case 'supplier_offers':
-        return '/supplier/pricing'
-
-      case 'supplier_dashboard':
-      case 'supplier_fulfillment':
-        return '/supplier/dashboard'
-
-      case 'completed':
-        return '/supplier/pricing'
-
-      default:
-        return '/supplier/pricing'
-    }
-  }
-
-  if (role === 'coordinator') {
-    switch (step) {
-      case 'role_setup':
-      case 'coordinator_setup':
-      case 'coordinator_dashboard':
-      case 'deal_claim':
-      case 'coordinator_tracking':
-      case 'coordinator_delivery':
-        return '/coordinator/dashboard'
-
-      case 'completed':
-        return '/coordinator/dashboard'
-
-      default:
-        return '/coordinator/dashboard'
-    }
-  }
-
-  return null
-}
 
 /*
  * SessionRedirect
  *
- * Restores the authenticated user from the JWT.
+ * This component ONLY restores the user's login session.
  *
  * IMPORTANT:
  *
- * The home/start pages now behave as "start a new workflow"
- * entry points for existing users.
+ * It does NOT automatically redirect "/" to the user's
+ * previous workflow.
  *
- * Therefore:
+ * This allows the following flow:
  *
- * Existing Artisan
- *      / or /start
- *          ↓
- *      /artisan/materials
+ * Review
+ *   ↓
+ * Thank You
+ *   ↓
+ * "/"
+ *   ↓
+ * Welcome page
+ *   ↓
+ * Enter rawMitra
+ *   ↓
+ * Role Selection
+ *   ↓
+ * Continue as Artisan
+ *   ↓
+ * Material Requirement
  *
- * Existing Supplier
- *      / or /start
- *          ↓
- *      /supplier/pricing
- *
- * Existing Coordinator
- *      / or /start
- *          ↓
- *      /coordinator/dashboard
- *
- * The user does NOT get sent back to the previous order's
- * current_step after completing an order.
+ * The same applies to Supplier and Coordinator.
  */
 function SessionRedirect() {
   const { authUser } = useAppState()
-  const navigate = useNavigate()
   const location = useLocation()
 
   const [checkingSession, setCheckingSession] = useState(true)
@@ -199,19 +94,24 @@ function SessionRedirect() {
       const token = api.getToken()
 
       /*
-       * No JWT means this is a guest visit.
+       * No saved JWT.
+       *
+       * The user is simply a guest.
        */
       if (!token) {
         if (active) {
           setCheckingSession(false)
         }
+
         return
       }
 
       try {
         /*
          * Ask the backend for the latest user information.
-         * This also verifies the JWT.
+         *
+         * This verifies the JWT and also retrieves the
+         * latest current_step and onboarding_complete values.
          */
         const response = await api.auth.getMe()
 
@@ -220,8 +120,9 @@ function SessionRedirect() {
         }
       } catch (err) {
         /*
-         * Invalid/expired JWT is handled by api.js.
-         * The user can continue as a guest.
+         * api.js clears an invalid/expired token.
+         *
+         * The application can therefore continue as a guest.
          */
         console.warn(
           'Session restoration failed:',
@@ -241,49 +142,54 @@ function SessionRedirect() {
     }
   }, [])
 
+
   /*
-   * Do not redirect while the JWT is being checked.
+   * Do not interfere with routing while the saved session
+   * is still being checked.
    */
   if (checkingSession) {
     return null
   }
 
+
   const user = serverUser || authUser
 
+
   /*
-   * No authenticated user.
+   * No logged-in user.
+   *
    * Normal public routing continues.
    */
   if (!user) {
     return null
   }
 
+
   /*
-   * These are pages where an authenticated user can
-   * intentionally start a new workflow.
+   * VERY IMPORTANT:
    *
-   * We do NOT use current_step here.
+   * We intentionally DO NOT redirect:
+   *
+   * "/" → "/artisan/materials"
+   *
+   * or:
+   *
+   * "/" → "/supplier/pricing"
+   *
+   * or:
+   *
+   * "/" → "/coordinator/dashboard"
+   *
+   * The Welcome page must remain accessible after logout,
+   * after completing an order, and after submitting a review.
    */
-  const newWorkflowEntryPaths = [
-    '/',
-    '/start',
-  ]
 
-  if (newWorkflowEntryPaths.includes(location.pathname)) {
-    const newWorkflowPath = getNewWorkflowPath(user)
-
-    if (newWorkflowPath) {
-      return <Navigate to={newWorkflowPath} replace />
-    }
-  }
 
   /*
-   * If an authenticated user somehow opens their
-   * registration page again, skip registration and
-   * take them directly to their role's starting page.
+   * If an authenticated user tries to open their registration
+   * page again, do not ask for their personal details again.
    *
-   * This prevents personal details from being requested
-   * again.
+   * Instead, take them to the starting page for their role.
    */
   if (
     location.pathname === '/artisan/register' &&
@@ -297,6 +203,7 @@ function SessionRedirect() {
     )
   }
 
+
   if (
     location.pathname === '/supplier/register' &&
     user.role === 'supplier'
@@ -308,6 +215,7 @@ function SessionRedirect() {
       />
     )
   }
+
 
   if (
     location.pathname === '/coordinator/register' &&
@@ -321,22 +229,36 @@ function SessionRedirect() {
     )
   }
 
+
   return null
 }
+
 
 export default function App() {
   return (
     <div className="app-shell">
+
       <NavBar />
 
       <BroadcastPopup />
 
       <main>
         <PageWrapper>
+
+          {/*
+           * Restores persistent login/session.
+           *
+           * It does NOT control the "/" page.
+           */}
           <SessionRedirect />
 
+
           <Routes>
-            {/* Public / Entry Pages */}
+
+            {/* =====================================================
+                PUBLIC / ENTRY PAGES
+               ===================================================== */}
+
             <Route
               path="/"
               element={<Welcome />}
@@ -362,7 +284,11 @@ export default function App() {
               element={<DemandForecast />}
             />
 
-            {/* Artisan Workflow */}
+
+            {/* =====================================================
+                ARTISAN WORKFLOW
+               ===================================================== */}
+
             <Route
               path="/artisan/register"
               element={<ArtisanRegister />}
@@ -393,7 +319,11 @@ export default function App() {
               element={<ArtisanTracking />}
             />
 
-            {/* Supplier Workflow */}
+
+            {/* =====================================================
+                SUPPLIER WORKFLOW
+               ===================================================== */}
+
             <Route
               path="/supplier/register"
               element={<SupplierRegister />}
@@ -409,7 +339,11 @@ export default function App() {
               element={<SupplierDashboard />}
             />
 
-            {/* Coordinator Workflow */}
+
+            {/* =====================================================
+                COORDINATOR WORKFLOW
+               ===================================================== */}
+
             <Route
               path="/coordinator/register"
               element={<CoordinatorRegister />}
@@ -420,14 +354,21 @@ export default function App() {
               element={<CoordinatorDashboard />}
             />
 
-            {/* Fallback */}
+
+            {/* =====================================================
+                FALLBACK
+               ===================================================== */}
+
             <Route
               path="*"
               element={<Welcome />}
             />
+
           </Routes>
+
         </PageWrapper>
       </main>
+
     </div>
   )
 }
