@@ -1,17 +1,17 @@
-# rawMitra (ৰ'মিত্ৰ)
+# rawMitra
 ### Shared Raw Material Procurement & Cost Coordination Portal
 > **Hackathon Problem Statement: WEB06** — Connecting rural artisans for collective raw material purchasing, transparent logistics cost allocation, and institutional fraud protection.
 
 ---
 
-## 📌 Executive Summary
+##  Executive Summary
 Small-scale artisans across Assam and the Northeast (specializing in Muga silk, bamboo, terracotta clay, bell metal, and dyes) are routinely exploited by high retail prices and steep solo transport charges (often ₹500–₹800 per shipment).
 
 **rawMitra** solves this by grouping geographically close artisans who share common material needs into collective procurement pools, unlocking wholesale supplier tier discounts (up to 35% savings) and fairly distributing transport charges using a mathematical cost-split algorithm.
 
 ---
 
-## 🌟 Key Features
+##  Key Features
 
 ### 1. Three-Sided Synchronized Ecosystem
 * **Artisans:** Input material requirements (category, specs, quantity, needed-by date), discover local peers, compare solo vs. group rates, confirm orders, and track shipments in real time.
@@ -37,7 +37,7 @@ Small-scale artisans across Assam and the Northeast (specializing in Muga silk, 
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 | Layer | Technology |
 |---|---|
@@ -49,7 +49,7 @@ Small-scale artisans across Assam and the Northeast (specializing in Muga silk, 
 
 ---
 
-## 🚀 Quick Start Guide
+##  Quick Start Guide
 
 ### Prerequisites
 * **Node.js** >= 20.x (Node.js 22 or 24 recommended)
@@ -91,7 +91,7 @@ npm run dev
 
 ---
 
-## 🔑 Demo Credentials (1-Click Instant Login Available)
+##  Demo Credentials (1-Click Instant Login Available)
 
 For lightning-fast presentation evaluation, the login modal includes **1-click instant demo profile buttons**:
 
@@ -105,7 +105,7 @@ For lightning-fast presentation evaluation, the login modal includes **1-click i
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```
 rawmitra/
@@ -144,7 +144,7 @@ rawmitra/
 
 ---
 
-## 🛡️ Hackathon Submission Branches
+##  Hackathon Submission Branches
 
 * **`main`**: Production-ready, fully integrated portal with all features, database persistence, and documentation.
 * **`feat/artisan-portal-i18n`**: Multi-step procurement flow, fair-share cost splitting, and Assamese/Hindi localization.
@@ -153,5 +153,5 @@ rawmitra/
 
 ---
 
-## 👥 Team & Acknowledgments
-Built with ❤️ for rural Indian artisans. Special thanks to the hackathon organizers and mentors for problem statement **WEB06**.
+##  Team & Acknowledgments
+Built with  love and care for rural Indian artisans. Special thanks to the hackathon organizers and mentors for problem statement **WEB06**.
