@@ -257,8 +257,6 @@ export default function ArtisanMatching() {
       itemsCount: batchItems.length,
       items: batchItems,
 
-      neededBy: batchItems[0]?.neededBy || currentReq?.requiredDate,
-
       // Aggregated fields for display and backwards compatibility:
       category: isMultiItem
         ? batchItems.map((it) => it.category).join(', ')
