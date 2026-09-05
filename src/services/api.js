@@ -1,5 +1,6 @@
 // Centralized API client for rawMitra backend communication
-// Manages JWT token storage and Bearer authentication headers.
+// Manages JWT token storage and automatically sends
+// Bearer authentication headers with authenticated requests.
 
 const API_BASE = '/api'
 const TOKEN_KEY = 'rawmitra_auth_token'
@@ -14,18 +15,24 @@ function getToken() {
 
 function setToken(token) {
   try {
-    if (token) localStorage.setItem(TOKEN_KEY, token)
-    else localStorage.removeItem(TOKEN_KEY)
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token)
+    } else {
+      localStorage.removeItem(TOKEN_KEY)
+    }
   } catch (e) {}
 }
 
 async function request(endpoint, options = {}) {
   const token = getToken()
+
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   }
 
+  // Automatically attach JWT to every API request
+  // when the user is logged in.
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
@@ -37,10 +44,23 @@ async function request(endpoint, options = {}) {
 
   const data = await response.json().catch(() => ({}))
 
+  /*
+   * If the JWT has expired or is invalid, remove it.
+   * This prevents the frontend from repeatedly using
+   * an invalid authentication token.
+   */
+  if (response.status === 401) {
+    setToken(null)
+  }
+
   if (!response.ok) {
-    const error = new Error(data.error || 'Request failed')
+    const error = new Error(
+      data.error || 'Request failed'
+    )
+
     error.status = response.status
     error.code = data.code
+
     throw error
   }
 
@@ -58,18 +78,69 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(credentials),
       })
-      if (data.token) setToken(data.token)
+
+      // Save JWT after successful login
+      if (data.token) {
+        setToken(data.token)
+      }
+
       return data
     },
+
     register: async (userData) => {
       const data = await request('/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData),
       })
-      if (data.token) setToken(data.token)
+
+      // Save JWT after successful registration
+      if (data.token) {
+        setToken(data.token)
+      }
+
       return data
     },
+
+    /*
+     * Restore the currently logged-in user.
+     *
+     * The JWT is automatically attached by request().
+     *
+     * Backend response includes:
+     * - user.id
+     * - user.role
+     * - user.name
+     * - user.current_step
+     * - user.onboarding_complete
+     */
     getMe: () => request('/auth/me'),
+
+    /*
+     * Save the user's current workflow progress.
+     *
+     * Example:
+     *
+     * api.auth.updateProgress({
+     *   current_step: 'group_matching',
+     *   onboarding_complete: false
+     * })
+     */
+    updateProgress: async ({
+      current_step,
+      onboarding_complete,
+    }) => {
+      return request('/auth/progress', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          current_step,
+          onboarding_complete,
+        }),
+      })
+    },
+
+    /*
+     * Clear JWT from browser storage.
+     */
     logout: () => {
       setToken(null)
     },
@@ -85,6 +156,7 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ requests }),
       }),
+
     withdraw: (id) =>
       request(`/materials/request/${id}`, {
         method: 'DELETE',
@@ -98,7 +170,9 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(payload),
       }),
-    getMyStock: () => request('/supplier/my-stock'),
+
+    getMyStock: () =>
+      request('/supplier/my-stock'),
   },
 
   // Broadcasts / pool requests
@@ -117,14 +191,17 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(orderPayload),
       }),
+
     claim: (orderId) =>
       request(`/orders/${orderId}/claim`, {
         method: 'PATCH',
       }),
+
     advanceStage: (orderId) =>
       request(`/orders/${orderId}/stage`, {
         method: 'PATCH',
       }),
+
     cancel: (orderId) =>
       request(`/orders/${orderId}/cancel`, {
         method: 'POST',
@@ -142,10 +219,13 @@ export const api = {
 
   // Security & Fraud Prevention Audit Engine
   audit: {
-    getSecurityAudit: () => request('/audit/security'),
+    getSecurityAudit: () =>
+      request('/audit/security'),
   },
 
   // Search
-  search: (query) => request(`/search?q=${encodeURIComponent(query)}`),
+  search: (query) =>
+    request(
+      `/search?q=${encodeURIComponent(query)}`
+    ),
 }
-
