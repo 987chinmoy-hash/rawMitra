@@ -1,19 +1,33 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppState } from '../context/AppContext.jsx'
 import RatingStars from './RatingStars.jsx'
 
 export default function ReviewList({ targetId, targetLabel }) {
   const state = useAppState()
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const [rating, setRating] = useState(5)
   const [review, setReview] = useState('')
   const entries = state.ratings[targetId] || []
 
+  
+
   function submit(e) {
-    e.preventDefault()
-    if (!state.currentUserId) return
-    dispatch({ type: 'ADD_RATING', targetId, rating: Number(rating), review })
-    setReview('')
+  e.preventDefault()
+  if (!state.currentUserId) return
+
+  dispatch({
+    type: 'ADD_RATING',
+    targetId,
+    rating: Number(rating),
+    review
+  })
+
+  setReview('')
+  navigate('/')
+ }
+    
   }
 
   return (
