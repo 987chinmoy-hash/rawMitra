@@ -12,8 +12,15 @@ const PORT = process.env.PORT || 5000
 // Initialize Database Schema
 initDatabase()
 
-// Middleware
-app.use(cors())
+// Middleware - Configured for Vercel cross-origin requests
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+)
 app.use(express.json())
 
 // Request Logger
@@ -40,6 +47,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error', message: err.message })
 })
 
-app.listen(PORT, () => {
-  console.log(`🚀 rawMitra Backend API & Database Service live on http://localhost:${PORT}`)
+// Listen on 0.0.0.0 for cloud host compatibility
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 rawMitra Backend API & Database Service live on port ${PORT}`)
 })
