@@ -63,15 +63,21 @@ export default function ArtisanTracking() {
                   </li>
                 ))}
               </ol>
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                {order.trackingStage < stages.length - 1 && (
-                  <button className="btn btn-outline" onClick={() => dispatch({ type: 'ADVANCE_TRACKING', orderId: order.id })}>
-                    {t('btnAdvanceStage')}
-                  </button>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                {order.trackingStage < stages.length - 1 ? (
+                  <>
+                    <button className="btn btn-outline" onClick={() => dispatch({ type: 'ADVANCE_TRACKING', orderId: order.id })}>
+                      {t('btnAdvanceStage')}
+                    </button>
+                    <button className="btn btn-ghost" style={{ color: 'var(--rust)' }} onClick={() => dispatch({ type: 'CANCEL_ORDER', orderId: order.id })}>
+                      {t('btnCancelOrder')}
+                    </button>
+                  </>
+                ) : (
+                  <span className="tag tag-green" style={{ fontSize: '0.88rem', padding: '0.45rem 0.85rem' }}>
+                    ✓ {t('stage5')} — Delivered to Artisan Workshop
+                  </span>
                 )}
-                <button className="btn btn-ghost" style={{ color: 'var(--rust)' }} onClick={() => dispatch({ type: 'CANCEL_ORDER', orderId: order.id })}>
-                  {t('btnCancelOrder')}
-                </button>
               </div>
             </>
           )}
