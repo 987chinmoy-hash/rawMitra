@@ -12,10 +12,19 @@ export default function ArtisanOrderConfirm() {
   const { t } = useTranslation()
   const order = state.pendingOrder
 
-  if (!artisan) { navigate('/artisan/register'); return null }
-  if (!order) { navigate('/artisan/matching'); return null }
+  if (!artisan) {
+    navigate('/artisan/register')
+    return null
+  }
 
-  const myShare = order.perArtisan?.find((p) => p.artisanId === artisan.id) || {
+  if (!order) {
+    navigate('/artisan/matching')
+    return null
+  }
+
+  const myShare = order.perArtisan?.find(
+    (p) => p.artisanId === artisan.id
+  ) || {
     quantity: order.totalQuantity,
     materialCost: order.materialTotal || order.totalCost,
     transportShare: order.transportTotal || 0,
@@ -23,73 +32,221 @@ export default function ArtisanOrderConfirm() {
   }
 
   function handleConfirm() {
-    dispatch({ type: 'CREATE_ORDER', payload: order })
-    navigate('/artisan/tracking')
+    // Save the order first
+    dispatch({
+      type: 'CREATE_ORDER',
+      payload: order,
+    })
+
+    // Mark this workflow as completed.
+    // The account itself remains active so the artisan
+    // can start another order without registering again.
+    dispatch({
+      type: 'UPDATE_PROGRESS',
+      current_step: 'completed',
+      onboarding_complete: true,
+    })
+
+    // Return to Home.
+    // App.jsx will automatically redirect an authenticated
+    // returning artisan to /artisan/materials for a new order.
+    navigate('/')
   }
 
   return (
     <div className="page page-narrow">
-      <Stepper steps={['Your details', 'Material needs', 'Match & buy', 'Confirm', 'Track']} current={3} />
+      <Stepper
+        steps={['Your details', 'Material needs', 'Match & buy', 'Confirm', 'Track']}
+        current={3}
+      />
+
       <h1>{t('confirmOrderTitle')}</h1>
       <p>{t('confirmOrderSub')}</p>
 
       <div className="card">
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.92rem' }}>
+        <table
+          style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: '0.92rem',
+          }}
+        >
           <tbody>
             <tr>
-              <td style={{ padding: '0.45rem 0', color: 'var(--ink-soft)' }}>{t('lblMaterialSpecs')}</td>
-              <td style={{ padding: '0.45rem 0', fontWeight: 600 }}>{t(order.category) || order.category} — {order.specification}</td>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  color: 'var(--ink-soft)',
+                }}
+              >
+                {t('lblMaterialSpecs')}
+              </td>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  fontWeight: 600,
+                }}
+              >
+                {t(order.category) || order.category} — {order.specification}
+              </td>
             </tr>
+
             <tr>
-              <td style={{ padding: '0.45rem 0', color: 'var(--ink-soft)' }}>{t('lblPurchaseMode')}</td>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  color: 'var(--ink-soft)',
+                }}
+              >
+                {t('lblPurchaseMode')}
+              </td>
               <td style={{ padding: '0.45rem 0' }}>
                 <span className="tag tag-brass">
-                  {order.purchaseMode === 'solo' ? t('buyAlone') : t('groupBuy')}
+                  {order.purchaseMode === 'solo'
+                    ? t('buyAlone')
+                    : t('groupBuy')}
                 </span>
               </td>
             </tr>
+
             <tr>
-              <td style={{ padding: '0.45rem 0', color: 'var(--ink-soft)' }}>{t('lblGroupTotalQty')}</td>
-              <td style={{ padding: '0.45rem 0' }}>{order.totalQuantity} {order.unit}</td>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  color: 'var(--ink-soft)',
+                }}
+              >
+                {t('lblGroupTotalQty')}
+              </td>
+              <td style={{ padding: '0.45rem 0' }}>
+                {order.totalQuantity} {order.unit}
+              </td>
             </tr>
+
             <tr>
-              <td style={{ padding: '0.45rem 0', color: 'var(--ink-soft)' }}>{t('lblSelectedSupplier')}</td>
-              <td style={{ padding: '0.45rem 0' }}>{order.supplierName}</td>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  color: 'var(--ink-soft)',
+                }}
+              >
+                {t('lblSelectedSupplier')}
+              </td>
+              <td style={{ padding: '0.45rem 0' }}>
+                {order.supplierName}
+              </td>
             </tr>
+
             <tr>
-              <td style={{ padding: '0.45rem 0', color: 'var(--ink-soft)' }}>{t('lblQuoteValidity')}</td>
-              <td style={{ padding: '0.45rem 0', color: '#166534', fontWeight: 600 }}>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  color: 'var(--ink-soft)',
+                }}
+              >
+                {t('lblQuoteValidity')}
+              </td>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  color: '#166534',
+                  fontWeight: 600,
+                }}
+              >
                 📅 {order.validity || '2026-09-25'}
               </td>
             </tr>
+
             <tr>
-              <td style={{ padding: '0.45rem 0', color: 'var(--ink-soft)' }}>{t('lblLogistics')}</td>
-              <td style={{ padding: '0.45rem 0', textTransform: 'capitalize' }}>{order.logistics}</td>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  color: 'var(--ink-soft)',
+                }}
+              >
+                {t('lblLogistics')}
+              </td>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  textTransform: 'capitalize',
+                }}
+              >
+                {order.logistics}
+              </td>
             </tr>
 
             {/* Fair cost breakdown rows */}
             <tr>
-              <td style={{ padding: '0.55rem 0', borderTop: '1px solid var(--line)', color: 'var(--ink-soft)' }}>
+              <td
+                style={{
+                  padding: '0.55rem 0',
+                  borderTop: '1px solid var(--line)',
+                  color: 'var(--ink-soft)',
+                }}
+              >
                 {t('lblYourMaterialShare')} ({myShare.quantity} {order.unit})
               </td>
-              <td style={{ padding: '0.55rem 0', borderTop: '1px solid var(--line)', fontWeight: 600 }}>
-                ₹{myShare.materialCost ? myShare.materialCost.toLocaleString('en-IN') : (myShare.cost || 0).toLocaleString('en-IN')}
+
+              <td
+                style={{
+                  padding: '0.55rem 0',
+                  borderTop: '1px solid var(--line)',
+                  fontWeight: 600,
+                }}
+              >
+                ₹
+                {myShare.materialCost
+                  ? myShare.materialCost.toLocaleString('en-IN')
+                  : (myShare.cost || 0).toLocaleString('en-IN')}
               </td>
             </tr>
+
             <tr>
-              <td style={{ padding: '0.45rem 0', color: 'var(--ink-soft)' }}>
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  color: 'var(--ink-soft)',
+                }}
+              >
                 {t('lblYourTransportShare')}
               </td>
-              <td style={{ padding: '0.45rem 0', fontWeight: 600 }}>
+
+              <td
+                style={{
+                  padding: '0.45rem 0',
+                  fontWeight: 600,
+                }}
+              >
                 ₹{(myShare.transportShare || 0).toLocaleString('en-IN')}
               </td>
             </tr>
+
             <tr style={{ background: 'rgba(192, 138, 40, 0.08)' }}>
-              <td style={{ padding: '0.75rem 0.5rem', borderTop: '2px solid var(--ink)', fontWeight: 700, fontSize: '1.05rem' }}>
+              <td
+                style={{
+                  padding: '0.75rem 0.5rem',
+                  borderTop: '2px solid var(--ink)',
+                  fontWeight: 700,
+                  fontSize: '1.05rem',
+                }}
+              >
                 {t('lblTotalPayable')}
               </td>
-              <td style={{ padding: '0.75rem 0.5rem', borderTop: '2px solid var(--ink)', fontWeight: 700, fontSize: '1.2rem', color: 'var(--ink)' }}>
-                ₹{(myShare.totalCost || myShare.cost || 0).toLocaleString('en-IN')}
+
+              <td
+                style={{
+                  padding: '0.75rem 0.5rem',
+                  borderTop: '2px solid var(--ink)',
+                  fontWeight: 700,
+                  fontSize: '1.2rem',
+                  color: 'var(--ink)',
+                }}
+              >
+                ₹
+                {(myShare.totalCost || myShare.cost || 0).toLocaleString(
+                  'en-IN'
+                )}
               </td>
             </tr>
           </tbody>
@@ -100,11 +257,24 @@ export default function ArtisanOrderConfirm() {
         <RulesBanner compact />
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-        <button className="btn btn-outline" onClick={() => navigate('/artisan/matching')}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          marginTop: '1rem',
+        }}
+      >
+        <button
+          className="btn btn-outline"
+          onClick={() => navigate('/artisan/matching')}
+        >
           {t('btnBackToMatch')}
         </button>
-        <button className="btn btn-primary" onClick={handleConfirm}>
+
+        <button
+          className="btn btn-primary"
+          onClick={handleConfirm}
+        >
           {t('btnConfirmPlaceOrder')}
         </button>
       </div>
