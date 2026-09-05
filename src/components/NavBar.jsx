@@ -7,13 +7,13 @@ import SecurityAuditModal from './SecurityAuditModal.jsx'
 import './NavBar.css'
 
 export default function NavBar() {
+  const [q, setQ] = useState('')
+  const [isAuthOpen, setIsAuthOpen] = useState(false)
+  const [isAuditOpen, setIsAuditOpen] = useState(false)
+  const navigate = useNavigate()
   const state = useAppState()
   const dispatch = useAppDispatch()
-  const navigate = useNavigate()
   const lang = state.language || 'en'
-  const [q, setQ] = useState('')
-  const [isAuthOpen, setIsAuthOpen] = useState(!state.authUser)
-  const [isAuditOpen, setIsAuditOpen] = useState(false)
 
   function handleSearch(e) {
     e.preventDefault()

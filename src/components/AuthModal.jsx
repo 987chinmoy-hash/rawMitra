@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api.js'
 import { useAppDispatch } from '../context/AppContext.jsx'
@@ -13,35 +13,15 @@ const ROLE_LANDING = {
 export default function AuthModal({ isOpen, onClose }) {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-
-  const [authMethod, setAuthMethod] = useState('email') // 'email' | 'phone'
-  const [tab, setTab] = useState('login') // 'login' | 'signup'
-  
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
-  const [otpToast, setOtpToast] = useState(null)
-  
-  // Registration fields
+  const [tab, setTab] = useState('login')
   const [role, setRole] = useState('artisan')
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [aadhar, setAadhar] = useState('')
   const [locationOrExp, setLocationOrExp] = useState('')
-
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('')
-
-  // Reset state when modal is opened
-  useEffect(() => {
-    if (isOpen) {
-      setError(null)
-      setStatusMessage('')
-      setOtpSent(false)
-      setOtp('')
-      setOtpToast(null)
-    }
-  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -51,189 +31,103 @@ export default function AuthModal({ isOpen, onClose }) {
     navigate(ROLE_LANDING[user.role] || '/')
   }
 
-  // Auto-fill on clicking or focusing the input field
-  function handleInputClick(field) {
+  async function handleQuickLogin(demoPhone, demoPass) {
     setError(null)
-    if (field === 'phone') {
-      if (!phone) setPhone('9864000001')
-    } else if (field === 'email') {
-      if (!email) setEmail('artisan.deepa@gmail.com')
-    } else if (field === 'name') {
-      if (!name) setName('Deepa Boro')
-    } else if (field === 'location') {
-      if (!locationOrExp) {
-        setLocationOrExp(role === 'coordinator' ? '5 years in handloom logistics' : 'Sualkuchi, Assam')
-      }
+    setLoading(true)
+    try {
+      const res = await api.auth.login({ phone: demoPhone, password: demoPass })
+      afterAuth(res.user)
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Instant 1-Click Login / Send OTP & Enter
   async function handleSubmit(e) {
-    if (e) e.preventDefault()
+    e.preventDefault()
     setError(null)
     setLoading(true)
 
-    // Ensure target is populated; if empty, auto-fill demo value
-    let currentTarget = authMethod === 'phone' ? phone.trim() : email.trim()
-    if (!currentTarget) {
-      currentTarget = authMethod === 'phone' ? '9864000001' : 'artisan.deepa@gmail.com'
-      if (authMethod === 'phone') setPhone(currentTarget)
-      else setEmail(currentTarget)
-    }
-
-    let currentName = name.trim()
-    if (tab === 'signup' && !currentName) {
-      currentName = 'Deepa Boro'
-      setName(currentName)
-    }
-
-    let currentLocation = locationOrExp.trim()
-    if (tab === 'signup' && !currentLocation) {
-      currentLocation = role === 'coordinator' ? '5 years in handloom logistics' : 'Sualkuchi, Assam'
-      setLocationOrExp(currentLocation)
-    }
-
-    setStatusMessage('Generating secure OTP...')
-
-    // 1. Dispatch OTP with resilient fallback
-    let deliveredCode = '4821'
     try {
-      const res = await api.auth.sendOtp({ target: currentTarget, type: authMethod })
-      if (res?.demoOtp) deliveredCode = res.demoOtp
-    } catch (backendErr) {
-      console.warn('Backend sendOtp fallback for demo velocity:', backendErr)
-    }
-
-    setOtpSent(true)
-    setOtp(deliveredCode)
-
-    const toastMsg = authMethod === 'phone'
-      ? `📱 SMS: Verification code is ${deliveredCode}`
-      : `📩 Gmail Alert: One-Time Password is ${deliveredCode}`
-
-    setOtpToast({
-      text: toastMsg,
-      code: deliveredCode,
-      type: authMethod,
-    })
-
-    setStatusMessage('Verifying credentials...')
-
-    // 2. Auto-verify & log in seamlessly so the user saves time
-    setTimeout(async () => {
-      try {
-        let authUser = null
-
-        try {
-          const verifyRes = await api.auth.verifyOtp({
-            target: currentTarget,
-            otp: deliveredCode,
-            role,
-            name: currentName || (authMethod === 'email' ? currentTarget.split('@')[0] : 'Artisan'),
-            locationOrExp: currentLocation,
-          })
-          if (verifyRes?.user) authUser = verifyRes.user
-        } catch (verifyErr) {
-          console.warn('Backend verifyOtp fallback for demo resilience:', verifyErr)
-        }
-
-        // Resilient fallback user so presentation NEVER fails or blocks the user
-        if (!authUser) {
-          const isSupplier = currentTarget.includes('bamboo') || currentTarget === '9435000014' || role === 'supplier'
-          const isCoord = currentTarget.includes('manash') || currentTarget === '9678000020' || role === 'coordinator'
-          const userRole = isCoord ? 'coordinator' : isSupplier ? 'supplier' : 'artisan'
-          const userName = currentName || (isSupplier ? 'Assam Bamboo Syndicate' : isCoord ? 'Manash Sarma' : 'Deepa Boro')
-
-          authUser = {
-            id: isSupplier ? 'S-1001' : isCoord ? 'C-1001' : 'A-1001',
-            role: userRole,
-            name: userName,
-            phone: authMethod === 'phone' ? currentTarget : '9864000001',
-            email: authMethod === 'email' ? currentTarget : 'artisan.deepa@gmail.com',
-            aadhar_masked: '•••• •••• 4821',
-            storeLocation: currentLocation || 'Sualkuchi, Assam',
-            experience: isCoord ? '5 years in handloom logistics' : null,
-            rating: 4.8,
-            reviewsCount: 12,
-          }
-        }
-
-        setStatusMessage('Verified! Entering portal...')
-        setTimeout(() => {
-          afterAuth(authUser)
-        }, 300)
-      } catch (finalErr) {
-        setLoading(false)
-        setStatusMessage('')
-        setError('Verification encountered an issue. Please try again.')
+      if (tab === 'login') {
+        const res = await api.auth.login({ phone, password: password || 'password123' })
+        afterAuth(res.user)
+      } else {
+        const res = await api.auth.register({
+          role,
+          name,
+          phone,
+          password: password || 'password123',
+          aadhar,
+          storeLocation: role !== 'coordinator' ? locationOrExp : undefined,
+          experience: role === 'coordinator' ? locationOrExp : undefined,
+        })
+        afterAuth(res.user)
       }
-    }, 450)
+    } catch (err) {
+      setError(err.message || 'Operation failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="auth-modal-overlay" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="auth-modal-overlay" role="dialog" aria-modal="true">
+      <div className="auth-modal">
         <button className="auth-modal-close" onClick={onClose} aria-label="Close dialog">
           &times;
         </button>
 
-        {/* Clean Header Strip */}
-        <div className="auth-header-strip">
-          <span className="auth-security-badge">🛡️ OTP Verified Client Access</span>
-          <h2>Welcome to rawMitra</h2>
-          <p>Sign in or register quickly using your Gmail or Mobile Phone number.</p>
-        </div>
-
-        {/* Method Switcher: Gmail vs Phone */}
-        <div className="auth-method-switcher">
-          <button
-            type="button"
-            className={`auth-method-btn ${authMethod === 'email' ? 'active' : ''}`}
-            onClick={() => {
-              setAuthMethod('email')
-              setOtpSent(false)
-              setOtpToast(null)
-              setError(null)
-            }}
-          >
-            📧 Gmail / Email OTP
-          </button>
-          <button
-            type="button"
-            className={`auth-method-btn ${authMethod === 'phone' ? 'active' : ''}`}
-            onClick={() => {
-              setAuthMethod('phone')
-              setOtpSent(false)
-              setOtpToast(null)
-              setError(null)
-            }}
-          >
-            📱 Mobile Phone OTP
-          </button>
-        </div>
-
-        {/* Tab Switcher: Login vs Sign Up */}
         <div className="auth-tabs">
           <button
             type="button"
             className={`auth-tab ${tab === 'login' ? 'is-active' : ''}`}
-            onClick={() => {
-              setTab('login')
-              setError(null)
-            }}
+            onClick={() => { setTab('login'); setError(null) }}
           >
             Log In
           </button>
           <button
             type="button"
             className={`auth-tab ${tab === 'signup' ? 'is-active' : ''}`}
-            onClick={() => {
-              setTab('signup')
-              setError(null)
-            }}
+            onClick={() => { setTab('signup'); setError(null) }}
           >
-            New Registration
+            Create Account
           </button>
+        </div>
+
+        {/* Demo Fast Fill Bar for Judges */}
+        <div className="auth-demo-bar">
+          <strong>⚡ 1-Click Instant Demo Login:</strong>
+          <div className="auth-demo-buttons">
+            <button
+              type="button"
+              className="btn-demo-pill"
+              onClick={() => handleQuickLogin('9864000001', 'password123')}
+              disabled={loading}
+              title="Instant sign-in as Deepa Boro"
+            >
+              🟢 Deepa (Artisan)
+            </button>
+            <button
+              type="button"
+              className="btn-demo-pill"
+              onClick={() => handleQuickLogin('9435000014', 'password123')}
+              disabled={loading}
+              title="Instant sign-in as Assam Bamboo Syndicate"
+            >
+              🔵 Assam Bamboo (Supplier)
+            </button>
+            <button
+              type="button"
+              className="btn-demo-pill"
+              onClick={() => handleQuickLogin('9678000020', 'password123')}
+              disabled={loading}
+              title="Instant sign-in as Manash Sarma"
+            >
+              🟣 Manash (Coordinator)
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -242,12 +136,11 @@ export default function AuthModal({ isOpen, onClose }) {
           </div>
         )}
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="auth-form-body">
+        <form onSubmit={handleSubmit}>
           {tab === 'signup' && (
             <>
               <div className="field">
-                <label>I am registering as:</label>
+                <label>Select Your Role</label>
                 <div className="auth-role-select">
                   {['artisan', 'supplier', 'coordinator'].map((r) => (
                     <button
@@ -257,22 +150,31 @@ export default function AuthModal({ isOpen, onClose }) {
                       onClick={() => setRole(r)}
                       style={{ textTransform: 'capitalize' }}
                     >
-                      {r === 'artisan' ? '🧶 Artisan' : r === 'supplier' ? '📦 Supplier' : '🚚 Coordinator'}
+                      {r}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="field">
-                <label>Full Name / Business Name (Click to auto-fill)</label>
+                <label>Full Name / Business Name</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  onClick={() => handleInputClick('name')}
-                  onFocus={() => handleInputClick('name')}
-                  placeholder="Click here to auto-fill name"
+                  placeholder="e.g. Tarun Rabha"
                   required
                 />
+              </div>
+
+              <div className="field">
+                <label>12-digit Aadhaar Number (KYC Verification)</label>
+                <input
+                  value={aadhar}
+                  onChange={(e) => setAadhar(e.target.value)}
+                  placeholder="XXXX XXXX XXXX"
+                  required
+                />
+                <span className="field-hint">Never stored in plain text. Hashed with SHA-256 for fraud unicity check.</span>
               </div>
 
               <div className="field">
@@ -280,76 +182,41 @@ export default function AuthModal({ isOpen, onClose }) {
                 <input
                   value={locationOrExp}
                   onChange={(e) => setLocationOrExp(e.target.value)}
-                  onClick={() => handleInputClick('location')}
-                  onFocus={() => handleInputClick('location')}
-                  placeholder={role === 'coordinator' ? 'e.g. 5 years in handloom logistics' : 'Click here to auto-fill location'}
+                  placeholder={role === 'coordinator' ? 'e.g. 5 years in transport co-op' : 'e.g. Sualkuchi, Assam'}
                   required
                 />
               </div>
             </>
           )}
 
-          {/* Primary Identifier Input: Gmail or Phone */}
-          {authMethod === 'email' ? (
-            <div className="field">
-              <label>Gmail / Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onClick={() => handleInputClick('email')}
-                onFocus={() => handleInputClick('email')}
-                placeholder="Click here to auto-fill demo Gmail"
-                autoComplete="email"
-                required
-              />
-              <span className="field-hint">💡 Click the box to auto-fill demo Gmail address</span>
-            </div>
-          ) : (
-            <div className="field">
-              <label>Mobile Phone Number</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                onClick={() => handleInputClick('phone')}
-                onFocus={() => handleInputClick('phone')}
-                placeholder="Click here to auto-fill demo Phone"
-                autoComplete="tel"
-                required
-              />
-              <span className="field-hint">💡 Click the box to auto-fill demo mobile number</span>
-            </div>
-          )}
+          <div className="field">
+            <label>Mobile Phone Number</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder={tab === 'login' ? '10-digit phone (e.g. 9864000001 or your number)' : '10-digit mobile number'}
+              required
+            />
+            {tab === 'login' && (
+              <span className="field-hint">💡 In demo mode: Any 10-digit phone number is accepted and auto-logged in.</span>
+            )}
+          </div>
 
-          {/* Simulated Toast Notification Banner */}
-          {otpToast && (
-            <div className="auth-otp-toast">
-              <div className="auth-toast-icon">{otpToast.type === 'phone' ? '📱' : '📩'}</div>
-              <div className="auth-toast-content">
-                <strong>Instant OTP Delivered:</strong>
-                <div className="auth-toast-text">{otpToast.text}</div>
-                <div className="auth-toast-auto-notice">✓ Verification code {otpToast.code} applied automatically</div>
-              </div>
-            </div>
-          )}
+          <div className="field">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
 
-          {/* Action Button */}
-          <button
-            type="submit"
-            className="btn btn-primary btn-block auth-submit-btn"
-            disabled={loading}
-          >
-            {loading
-              ? (statusMessage || 'Processing...')
-              : tab === 'signup'
-                ? `⚡ Register & Enter Portal (${authMethod === 'email' ? 'Gmail' : 'Phone'}) →`
-                : `⚡ Send OTP & Instant Login (${authMethod === 'email' ? 'Gmail' : 'Phone'}) →`}
+          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+            {loading ? 'Processing...' : tab === 'login' ? 'Log In to rawMitra' : 'Complete Verification & Register'}
           </button>
-
-          <p className="auth-footer-help">
-            🔒 Demo velocity mode active: 1-click auto-fill & auto-verification saves judge and reviewer time.
-          </p>
         </form>
       </div>
     </div>

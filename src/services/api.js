@@ -69,19 +69,6 @@ export const api = {
       if (data.token) setToken(data.token)
       return data
     },
-    sendOtp: (payload) =>
-      request('/auth/send-otp', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-    verifyOtp: async (payload) => {
-      const data = await request('/auth/verify-otp', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-      if (data.token) setToken(data.token)
-      return data
-    },
     getMe: () => request('/auth/me'),
     logout: () => {
       setToken(null)
