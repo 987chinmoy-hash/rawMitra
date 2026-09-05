@@ -59,7 +59,7 @@ export default function NavBar() {
 
         <nav className="nav-links">
           <Link to="/forecast">{t('priceOutlook', lang)}</Link>
-          <Link to="/guide">{t('guidebook', lang)}</Link>
+          <Link to="/guide">{t('guideTitle', lang)}</Link>
 
           <button
             type="button"
