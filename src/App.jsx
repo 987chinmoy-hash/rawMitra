@@ -29,7 +29,6 @@ import { api } from './services/api.js'
 
 import './App.css'
 
-
 function PageWrapper({ children }) {
   const ref = useRef(null)
   const location = useLocation()
@@ -49,37 +48,6 @@ function PageWrapper({ children }) {
   )
 }
 
-
-/*
- * SessionRedirect
- *
- * This component ONLY restores the user's login session.
- *
- * IMPORTANT:
- *
- * It does NOT automatically redirect "/" to the user's
- * previous workflow.
- *
- * This allows the following flow:
- *
- * Review
- *   ↓
- * Thank You
- *   ↓
- * "/"
- *   ↓
- * Welcome page
- *   ↓
- * Enter rawMitra
- *   ↓
- * Role Selection
- *   ↓
- * Continue as Artisan
- *   ↓
- * Material Requirement
- *
- * The same applies to Supplier and Coordinator.
- */
 function SessionRedirect() {
   const { authUser } = useAppState()
   const location = useLocation()
@@ -93,41 +61,20 @@ function SessionRedirect() {
     async function restoreSession() {
       const token = api.getToken()
 
-      /*
-       * No saved JWT.
-       *
-       * The user is simply a guest.
-       */
       if (!token) {
         if (active) {
           setCheckingSession(false)
         }
-
         return
       }
 
       try {
-        /*
-         * Ask the backend for the latest user information.
-         *
-         * This verifies the JWT and also retrieves the
-         * latest current_step and onboarding_complete values.
-         */
         const response = await api.auth.getMe()
-
         if (active && response?.user) {
           setServerUser(response.user)
         }
       } catch (err) {
-        /*
-         * api.js clears an invalid/expired token.
-         *
-         * The application can therefore continue as a guest.
-         */
-        console.warn(
-          'Session restoration failed:',
-          err.message || err
-        )
+        console.warn('Session restoration failed:', err.message || err)
       } finally {
         if (active) {
           setCheckingSession(false)
@@ -142,233 +89,71 @@ function SessionRedirect() {
     }
   }, [])
 
-
-  /*
-   * Do not interfere with routing while the saved session
-   * is still being checked.
-   */
   if (checkingSession) {
     return null
   }
 
-
   const user = serverUser || authUser
 
-
-  /*
-   * No logged-in user.
-   *
-   * Normal public routing continues.
-   */
   if (!user) {
     return null
   }
 
-
-  /*
-   * VERY IMPORTANT:
-   *
-   * We intentionally DO NOT redirect:
-   *
-   * "/" → "/artisan/materials"
-   *
-   * or:
-   *
-   * "/" → "/supplier/pricing"
-   *
-   * or:
-   *
-   * "/" → "/coordinator/dashboard"
-   *
-   * The Welcome page must remain accessible after logout,
-   * after completing an order, and after submitting a review.
-   */
-
-
-  /*
-   * If an authenticated user tries to open their registration
-   * page again, do not ask for their personal details again.
-   *
-   * Instead, take them to the starting page for their role.
-   */
-  if (
-    location.pathname === '/artisan/register' &&
-    user.role === 'artisan'
-  ) {
-    return (
-      <Navigate
-        to="/artisan/materials"
-        replace
-      />
-    )
+  if (location.pathname === '/artisan/register' && user.role === 'artisan') {
+    return <Navigate to="/artisan/materials" replace />
   }
 
-
-  if (
-    location.pathname === '/supplier/register' &&
-    user.role === 'supplier'
-  ) {
-    return (
-      <Navigate
-        to="/supplier/pricing"
-        replace
-      />
-    )
+  if (location.pathname === '/supplier/register' && user.role === 'supplier') {
+    return <Navigate to="/supplier/pricing" replace />
   }
 
-
-  if (
-    location.pathname === '/coordinator/register' &&
-    user.role === 'coordinator'
-  ) {
-    return (
-      <Navigate
-        to="/coordinator/dashboard"
-        replace
-      />
-    )
+  if (location.pathname === '/coordinator/register' && user.role === 'coordinator') {
+    return <Navigate to="/coordinator/dashboard" replace />
   }
-
 
   return null
 }
 
-
 export default function App() {
   return (
     <div className="app-shell">
-
       <NavBar />
-
       <BroadcastPopup />
 
       <main>
         <PageWrapper>
-
-          {/*
-           * Restores persistent login/session.
-           *
-           * It does NOT control the "/" page.
-           */}
           <SessionRedirect />
 
-
           <Routes>
+            {/* PUBLIC / ENTRY PAGES */}
+            <Route path="/" element={<Welcome />} />
+            <Route path="/start" element={<RoleSelect />} />
+            <Route path="/guide" element={<GuideBook />} />
+            <Route path="/search" element={<SearchResults />} />
+            <Route path="/forecast" element={<DemandForecast />} />
 
-            {/* =====================================================
-                PUBLIC / ENTRY PAGES
-               ===================================================== */}
+            {/* ARTISAN WORKFLOW */}
+            <Route path="/artisan/register" element={<ArtisanRegister />} />
+            <Route path="/artisan/materials" element={<ArtisanMaterials />} />
+            <Route path="/artisan/matching" element={<ArtisanMatching />} />
+            <Route path="/artisan/request" element={<ArtisanRequestBroadcast />} />
+            <Route path="/artisan/confirm" element={<ArtisanOrderConfirm />} />
+            <Route path="/artisan/tracking" element={<ArtisanTracking />} />
 
-            <Route
-              path="/"
-              element={<Welcome />}
-            />
+            {/* SUPPLIER WORKFLOW */}
+            <Route path="/supplier/register" element={<SupplierRegister />} />
+            <Route path="/supplier/pricing" element={<SupplierPricing />} />
+            <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
 
-            <Route
-              path="/start"
-              element={<RoleSelect />}
-            />
+            {/* COORDINATOR WORKFLOW */}
+            <Route path="/coordinator/register" element={<CoordinatorRegister />} />
+            <Route path="/coordinator/dashboard" element={<CoordinatorDashboard />} />
 
-            <Route
-              path="/guide"
-              element={<GuideBook />}
-            />
-
-            <Route
-              path="/search"
-              element={<SearchResults />}
-            />
-
-            <Route
-              path="/forecast"
-              element={<DemandForecast />}
-            />
-
-
-            {/* =====================================================
-                ARTISAN WORKFLOW
-               ===================================================== */}
-
-            <Route
-              path="/artisan/register"
-              element={<ArtisanRegister />}
-            />
-
-            <Route
-              path="/artisan/materials"
-              element={<ArtisanMaterials />}
-            />
-
-            <Route
-              path="/artisan/matching"
-              element={<ArtisanMatching />}
-            />
-
-            <Route
-              path="/artisan/request"
-              element={<ArtisanRequestBroadcast />}
-            />
-
-            <Route
-              path="/artisan/confirm"
-              element={<ArtisanOrderConfirm />}
-            />
-
-            <Route
-              path="/artisan/tracking"
-              element={<ArtisanTracking />}
-            />
-
-
-            {/* =====================================================
-                SUPPLIER WORKFLOW
-               ===================================================== */}
-
-            <Route
-              path="/supplier/register"
-              element={<SupplierRegister />}
-            />
-
-            <Route
-              path="/supplier/pricing"
-              element={<SupplierPricing />}
-            />
-
-            <Route
-              path="/supplier/dashboard"
-              element={<SupplierDashboard />}
-            />
-
-
-            {/* =====================================================
-                COORDINATOR WORKFLOW
-               ===================================================== */}
-
-            <Route
-              path="/coordinator/register"
-              element={<CoordinatorRegister />}
-            />
-
-            <Route
-              path="/coordinator/dashboard"
-              element={<CoordinatorDashboard />}
-            />
-
-
-            {/* =====================================================
-                FALLBACK
-               ===================================================== */}
-
-            <Route
-              path="*"
-              element={<Welcome />}
-            />
-
+            {/* FALLBACK */}
+            <Route path="*" element={<Welcome />} />
           </Routes>
-
         </PageWrapper>
       </main>
-
     </div>
   )
 }
