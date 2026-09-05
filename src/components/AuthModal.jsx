@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api.js'
 import { useAppDispatch } from '../context/AppContext.jsx'
@@ -10,11 +10,11 @@ const ROLE_LANDING = {
   coordinator: '/coordinator/dashboard',
 }
 
-export default function AuthModal({ isOpen, onClose }) {
+export default function AuthModal({ isOpen, onClose, initialRole = 'artisan', initialTab = 'login' }) {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const [tab, setTab] = useState('login')
-  const [role, setRole] = useState('artisan')
+  const [tab, setTab] = useState(initialTab)
+  const [role, setRole] = useState(initialRole)
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -22,6 +22,14 @@ export default function AuthModal({ isOpen, onClose }) {
   const [locationOrExp, setLocationOrExp] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setTab(initialTab)
+      setRole(initialRole)
+      setError(null)
+    }
+  }, [isOpen, initialRole, initialTab])
 
   if (!isOpen) return null
 

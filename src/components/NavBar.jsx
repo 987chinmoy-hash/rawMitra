@@ -116,7 +116,12 @@ export default function NavBar() {
         </nav>
       </div>
 
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        initialTab="login"
+        initialRole="artisan"
+      />
       <SecurityAuditModal isOpen={isAuditOpen} onClose={() => setIsAuditOpen(false)} />
     </header>
   )
