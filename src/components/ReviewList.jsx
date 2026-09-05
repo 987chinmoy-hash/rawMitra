@@ -14,18 +14,19 @@ export default function ReviewList({ targetId, targetLabel }) {
   
 
   function submit(e) {
-  e.preventDefault()
-  if (!state.currentUserId) return
+    
+    e.preventDefault()
+    if (!state.currentUserId) return
 
-  dispatch({
-    type: 'ADD_RATING',
-    targetId,
-    rating: Number(rating),
-    review
+    dispatch({
+      type: 'ADD_RATING',
+      targetId,
+      rating: Number(rating),
+      review
   })
 
-  setReview('')
-  navigate('/')
+    setReview('')
+    navigate('/')
  }
     
   }
