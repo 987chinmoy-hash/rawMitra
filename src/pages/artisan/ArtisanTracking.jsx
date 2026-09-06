@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAppState, useAppDispatch, getCurrentArtisan } from '../../context/AppContext.jsx'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../../utils/i18n.js'
 import Stepper from '../../components/Stepper.jsx'
 import ReviewList from '../../components/ReviewList.jsx'
@@ -177,12 +177,50 @@ export default function ArtisanTracking() {
 
           <span
             className={`tag ${
-              order.status === 'cancelled' ? 'tag-rust' : 'tag-green'
+              order.status === 'cancelled' || order.status === 'rejected'
+                ? 'tag-rust'
+                : order.status === 'placed'
+                ? 'tag-brass'
+                : 'tag-green'
             }`}
+            style={{ textTransform: 'capitalize', fontWeight: 700 }}
           >
-            {order.status}
+            {order.status === 'placed'
+              ? '⏳ Awaiting Supplier Approval'
+              : order.status === 'accepted'
+              ? '✅ Accepted by Supplier'
+              : order.status === 'rejected'
+              ? '❌ Rejected by Supplier'
+              : order.status}
           </span>
         </div>
+
+        {order.status === 'placed' && (
+          <div style={{ background: '#fffdf5', border: '1px solid #fde68a', padding: '0.85rem 1rem', borderRadius: '6px', marginBottom: '1.25rem', fontSize: '0.88rem', color: '#92400e', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              ⏳ <strong>Pending Supplier Review:</strong> Your group bulk order has been routed to <strong>{order.supplierName || 'Supplier'}</strong>. When the supplier logs into their portal, they will review and Accept or Reject the order.
+            </div>
+            <Link
+              to="/supplier/dashboard"
+              className="btn btn-outline"
+              style={{ fontSize: '0.82rem', borderColor: '#f59e0b', color: '#92400e', background: '#fff', padding: '0.4rem 0.85rem', whiteSpace: 'nowrap' }}
+            >
+              🏭 Open Supplier Portal to Review &rarr;
+            </Link>
+          </div>
+        )}
+
+        {order.status === 'accepted' && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', padding: '0.75rem 1rem', borderRadius: '6px', marginBottom: '1.25rem', fontSize: '0.88rem', color: '#166534' }}>
+            ✅ <strong>Order Accepted by Supplier:</strong> <strong>{order.supplierName || 'Supplier'}</strong> has approved this pooled bulk batch! The order is now locked and proceeding through dispatch stages.
+          </div>
+        )}
+
+        {order.status === 'rejected' && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '0.75rem 1rem', borderRadius: '6px', marginBottom: '1.25rem', fontSize: '0.88rem', color: '#991b1b' }}>
+            ❌ <strong>Order Declined:</strong> The chosen supplier was unable to accept this order at this time.
+          </div>
+        )}
 
         {order.status === 'cancelled' ? (
           <p style={{ color: 'var(--rust)' }}>
@@ -232,7 +270,20 @@ export default function ArtisanTracking() {
                 marginTop: '1rem',
               }}
             >
-              {order.trackingStage < stages.length - 1 ? (
+              {order.status === 'placed' ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', width: '100%', padding: '0.85rem 1rem', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px' }}>
+                  <div style={{ flex: 1, fontSize: '0.88rem', color: '#92400e' }}>
+                    ⏳ <strong>Awaiting Supplier Approval:</strong> The supplier (<strong>{order.supplierName || 'Verified Supplier'}</strong>) must review and Accept or Reject this order from their dashboard before dispatch begins.
+                  </div>
+                  <Link
+                    to="/supplier/dashboard"
+                    className="btn btn-primary"
+                    style={{ background: '#f59e0b', borderColor: '#d97706', color: '#fff', fontSize: '0.85rem', fontWeight: 700, padding: '0.45rem 0.95rem', whiteSpace: 'nowrap' }}
+                  >
+                    🏭 Open Supplier Portal to Review &rarr;
+                  </Link>
+                </div>
+              ) : order.trackingStage < stages.length - 1 ? (
                 <>
                   <button
                     type="button"
@@ -339,8 +390,8 @@ export default function ArtisanTracking() {
   return (
     <div className="page page-narrow">
       <Stepper
-        steps={['Your details', 'Material needs', 'Match & buy', 'Confirm', 'Track']}
-        current={4}
+        steps={['Your details', 'Material needs', 'Artisan groups', 'Choose supplier', 'Confirm', 'Track']}
+        current={5}
       />
       <div
         style={{

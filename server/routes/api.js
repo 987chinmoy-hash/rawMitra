@@ -5,6 +5,7 @@ import {
   me,
   updateProgress,
   bootstrap,
+  getAllSuppliers,
 } from '../controllers/authController.js'
 import {
   addRequests,
@@ -14,6 +15,10 @@ import {
 } from '../controllers/materialController.js'
 import {
   createOrder,
+  getSupplierOrders,
+  acceptOrder,
+  rejectOrder,
+  resetOrderToPending,
   claimDeal,
   advanceStage,
   cancelOrder,
@@ -70,11 +75,37 @@ router.get(
   getMyStock
 )
 
+// Supplier Incoming Group Orders & Review
+router.get(
+  '/supplier/orders',
+  getSupplierOrders
+)
+
+// Public list of all registered suppliers & catalog
+router.get(
+  '/suppliers',
+  getAllSuppliers
+)
+
 // Order Lifecycle & Penalty Enforcement
 router.post(
   '/orders',
-  requireAuth,
   createOrder
+)
+
+router.patch(
+  '/orders/:id/accept',
+  acceptOrder
+)
+
+router.patch(
+  '/orders/:id/reject',
+  rejectOrder
+)
+
+router.patch(
+  '/orders/:id/reset',
+  resetOrderToPending
 )
 
 router.patch(

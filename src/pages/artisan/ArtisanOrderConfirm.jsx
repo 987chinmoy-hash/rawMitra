@@ -47,68 +47,79 @@ export default function ArtisanOrderConfirm() {
 
   async function handleConfirm() {
     setSubmitting(true)
+    const newOrderId = order.id || `ORD-${Date.now().toString().slice(-6)}`
+    const groupName = order.selectedGroup?.groupName || order.groupName || 'Artisan Syndicate Pool'
+    const deliveryLocation = order.selectedGroup?.location || order.deliveryLocation || 'Tezpur'
+
     try {
-      // If backend is active, persist to SQLite database
-      if (api.getToken()) {
-        try {
-          if (isMultiItem && order.items) {
-            for (const item of order.items) {
-              await api.orders.create({
-                category: item.category,
-                specification: item.specification,
-                unit: item.unit,
-                totalQuantity: item.quantity,
-                supplierId: item.supplierId,
-                pricePerUnit: item.unitPrice,
-                transportCharge: item.myTransportShare,
-                validity: item.validity,
-                perArtisan: [
-                  {
-                    artisanId: artisan.id,
-                    quantity: item.quantity,
-                    materialCost: item.myMaterialCost,
-                    transportShare: item.myTransportShare,
-                    totalCost: item.myTotalCost,
-                  },
-                ],
-              })
-            }
-          } else {
+      // Persist order directly into SQLite Database
+      try {
+        if (isMultiItem && order.items) {
+          for (const item of order.items) {
             await api.orders.create({
-              category: order.category,
-              specification: order.specification,
-              unit: order.unit,
-              totalQuantity: order.totalQuantity,
-              supplierId: order.supplierId,
-              pricePerUnit: order.pricePerUnit,
-              transportCharge: order.transportTotal || order.transportCharge,
-              validity: order.validity,
-        
-              
-              perArtisan: (order.perArtisan || []).map((p) => ({
-                artisanId: p.artisanId,
-                quantity: p.quantity,
-                materialCost: p.materialCost,
-                transportShare: p.transportShare,
-                totalCost: p.totalCost,
-              })),
+              id: `ORD-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
+              category: item.category,
+              specification: item.specification,
+              unit: item.unit,
+              totalQuantity: item.quantity,
+              supplierId: item.supplierId,
+              pricePerUnit: item.unitPrice,
+              transportCharge: item.myTransportShare,
+              validity: item.validity,
+              groupName,
+              deliveryLocation,
+              status: 'placed',
+              perArtisan: [
+                {
+                  artisanId: artisan.id || 'A-PARTHA',
+                  artisanName: artisan.name || 'Partha',
+                  quantity: item.quantity,
+                  materialCost: item.myMaterialCost,
+                  transportShare: item.myTransportShare,
+                  totalCost: item.myTotalCost,
+                },
+              ],
             })
           }
-        } catch (apiErr) {
-          console.warn('Backend order sync info:', apiErr.message)
+        } else {
+          await api.orders.create({
+            id: newOrderId,
+            category: order.category,
+            specification: order.specification,
+            unit: order.unit,
+            totalQuantity: order.totalQuantity,
+            supplierId: order.supplierId,
+            supplierName: order.supplierName,
+            pricePerUnit: order.pricePerUnit,
+            transportCharge: order.transportTotal || order.transportCharge,
+            validity: order.validity,
+            groupName,
+            deliveryLocation,
+            status: 'placed',
+            perArtisan: (order.perArtisan || []).map((p) => ({
+              artisanId: p.artisanId || artisan?.id || 'A-PARTHA',
+              artisanName: p.artisanName || p.name || artisan?.name || 'Partha',
+              quantity: p.quantity,
+              materialCost: p.materialCost,
+              transportShare: p.transportShare,
+              totalCost: p.totalCost,
+            })),
+          })
         }
+      } catch (apiErr) {
+        console.warn('Backend order sync info:', apiErr.message)
       }
 
-      const newOrderId = order.id || `ORD-${Date.now().toString().slice(-6)}`
-
-      // Save the confirmed order to client state
+      // Save the confirmed order to client state with status 'placed' (pending supplier review)
       dispatch({
         type: 'CREATE_ORDER',
         payload: {
           ...order,
           id: newOrderId,
-          status: 'confirmed',
+          status: 'placed',
           trackingStage: 0,
+          groupName,
+          deliveryLocation,
           createdAt: new Date().toISOString(),
         },
       })
@@ -129,8 +140,8 @@ export default function ArtisanOrderConfirm() {
   return (
     <div className={`page ${isMultiItem ? '' : 'page-narrow'}`}>
       <Stepper
-        steps={['Your details', 'Material needs', 'Match & buy', 'Confirm', 'Track']}
-        current={3}
+        steps={['Your details', 'Material needs', 'Artisan groups', 'Choose supplier', 'Confirm', 'Track']}
+        current={4}
       />
 
       <div style={{ marginBottom: '1.5rem' }}>
@@ -320,7 +331,14 @@ export default function ArtisanOrderConfirm() {
                   {t('lblSelectedSupplier')}
                 </td>
                 <td style={{ padding: '0.45rem 0' }}>
-                  {order.supplierName}
+                  <strong>{order.supplierName}</strong>
+                  {order.supplierLocation && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)', marginTop: '0.2rem' }}>
+                      📍 {order.supplierLocation}
+                      {order.supplierRating ? ` · ★ ${order.supplierRating.toFixed ? order.supplierRating.toFixed(1) : order.supplierRating}` : ''}
+                      {order.qualityTier ? ` · ${order.qualityTier}` : ''}
+                    </div>
+                  )}
                 </td>
               </tr>
 
@@ -417,9 +435,13 @@ export default function ArtisanOrderConfirm() {
       >
         <button
           className="btn btn-outline"
-          onClick={() => navigate('/artisan/matching')}
+          onClick={() => {
+            const cat = order.category || 'Bamboo'
+            const loc = order.selectedGroup?.location || order.supplierLocation || 'Tezpur'
+            navigate(`/artisan/suppliers?category=${encodeURIComponent(cat)}&location=${encodeURIComponent(loc)}${order.batchId ? `&batchId=${order.batchId}` : ''}`)
+          }}
         >
-          {t('btnBackToMatch')}
+          ← Back to Choose Supplier
         </button>
 
         <button

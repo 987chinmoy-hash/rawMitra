@@ -1,7 +1,12 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAppState, useAppDispatch, getCurrentArtisan } from '../../context/AppContext.jsx'
-import { analyzeCompatibleArtisans, generateProcurementChoices } from '../../utils/matching.js'
+import {
+  analyzeCompatibleArtisans,
+  generateProcurementChoices,
+  DELIVERY_LOCATIONS,
+  resolveDeliveryLocation,
+} from '../../utils/matching.js'
 import { useTranslation } from '../../utils/i18n.js'
 import Stepper from '../../components/Stepper.jsx'
 import RatingStars from '../../components/RatingStars.jsx'
@@ -30,12 +35,13 @@ export default function ArtisanMatching() {
       id: 'A-1001',
       name: 'Deepa Boro',
       role: 'artisan',
-      storeLocation: 'Sualkuchi, Assam',
+      storeLocation: 'Tezpur, Assam',
     }
 
   const queryBatchId = searchParams.get('batchId') || state.currentBatchId
   const queryCat = searchParams.get('category')
   const queryReqId = searchParams.get('reqId')
+  const queryLoc = searchParams.get('location')
 
   // Find the artisan's active requests strictly for the active batch
   const myRequests = useMemo(() => {
@@ -79,7 +85,7 @@ export default function ArtisanMatching() {
         specification: 'Treated Bhaluka bamboo poles, 10ft',
         quantity: 25,
         unit: 'piece',
-        location: artisan.storeLocation || 'Sualkuchi, Assam',
+        location: artisan.storeLocation || 'Tezpur, Assam',
         requiredDate: '2026-09-28',
         status: 'open',
       },
@@ -126,34 +132,56 @@ export default function ArtisanMatching() {
 
   const currentReq = myRequests[activeReqIndex] || myRequests[0]
 
+  // Track active delivery hub (Tezpur, Guwahati, or Dibrugarh)
+  const [activeDeliveryLocation, setActiveDeliveryLocation] = useState(() =>
+    resolveDeliveryLocation(queryLoc || currentReq?.location || artisan?.storeLocation || 'Tezpur')
+  )
+
+  useEffect(() => {
+    if (queryLoc) {
+      setActiveDeliveryLocation(resolveDeliveryLocation(queryLoc))
+    } else if (currentReq?.location) {
+      setActiveDeliveryLocation(resolveDeliveryLocation(currentReq.location))
+    }
+  }, [queryLoc, currentReq?.location])
+
+  const currentReqWithLoc = useMemo(() => {
+    if (!currentReq) return null
+    return {
+      ...currentReq,
+      location: activeDeliveryLocation,
+    }
+  }, [currentReq, activeDeliveryLocation])
+
   // Track independent choice selection per material request ID: { [reqId]: choiceId }
   const [selectedChoicesByReq, setSelectedChoicesByReq] = useState({})
 
-  // Active choice ID for currentReq (defaults to 'choice-mega-bulk')
-  const activeChoiceId =
-    (currentReq && selectedChoicesByReq[currentReq.id]) ||
-    'choice-mega-bulk'
-
-  // 1. Run database compatibility analysis strictly for this material
+  // 1. Run database compatibility analysis strictly for this material in this location
   const analysis = useMemo(() => {
-    if (!currentReq) return null
+    if (!currentReqWithLoc) return null
     return analyzeCompatibleArtisans(
-      currentReq,
+      currentReqWithLoc,
       state.materialRequests || [],
       state.artisans || []
     )
-  }, [currentReq, state.materialRequests, state.artisans])
+  }, [currentReqWithLoc, state.materialRequests, state.artisans])
 
-  // 2. Generate 3 curated procurement choices strictly for this material
+  // 2. Generate 3 curated location-based artisan groups strictly for this material
   const choices = useMemo(() => {
-    if (!currentReq || !analysis) return []
+    if (!currentReqWithLoc) return []
     return generateProcurementChoices(
-      currentReq,
+      currentReqWithLoc,
       analysis,
       state.suppliers || [],
       artisan
     )
-  }, [currentReq, analysis, state.suppliers, artisan])
+  }, [currentReqWithLoc, analysis, state.suppliers, artisan])
+
+  // Active choice ID for currentReq (defaults to first group in location)
+  const activeChoiceId =
+    (currentReq && selectedChoicesByReq[currentReq.id]) ||
+    choices[0]?.id ||
+    'group-tezpur-1'
 
   const activeChoice =
     choices.find((c) => c.id === activeChoiceId) || choices[0] || null
@@ -170,13 +198,14 @@ export default function ArtisanMatching() {
   const allChoicesByReq = useMemo(() => {
     const map = {}
     for (const req of myRequests) {
+      const rWithLoc = { ...req, location: activeDeliveryLocation }
       const a = analyzeCompatibleArtisans(
-        req,
+        rWithLoc,
         state.materialRequests || [],
         state.artisans || []
       )
       const ch = generateProcurementChoices(
-        req,
+        rWithLoc,
         a,
         state.suppliers || [],
         artisan
@@ -184,13 +213,14 @@ export default function ArtisanMatching() {
       map[req.id] = ch
     }
     return map
-  }, [myRequests, state.materialRequests, state.artisans, state.suppliers, artisan])
+  }, [myRequests, state.materialRequests, state.artisans, state.suppliers, artisan, activeDeliveryLocation])
 
   // Consolidated batch item representations
   const batchItems = useMemo(() => {
     return myRequests.map((req) => {
       const choicesForReq = allChoicesByReq[req.id] || []
-      const chosenChoiceId = selectedChoicesByReq[req.id] || 'choice-mega-bulk'
+      const defaultChoiceId = choicesForReq[0]?.id || 'group-tezpur-1'
+      const chosenChoiceId = selectedChoicesByReq[req.id] || defaultChoiceId
       const chosenPlan =
         choicesForReq.find((c) => c.id === chosenChoiceId) ||
         choicesForReq[0] ||
@@ -202,11 +232,9 @@ export default function ArtisanMatching() {
         specification: chosenPlan?.supplier?.specification || req.specification,
         quantity: req.quantity,
         unit: req.unit,
-        
-        
-        chosenPlanId: chosenPlan?.id || 'choice-mega-bulk',
-        chosenPlanTitle: chosenPlan?.title || 'District Mega-Bulk Tier',
-        chosenPlanBadge: chosenPlan?.badge || '🏆 Maximum Savings',
+        chosenPlanId: chosenPlan?.id || defaultChoiceId,
+        chosenPlanTitle: chosenPlan?.title || chosenPlan?.groupName || 'Artisan Group',
+        chosenPlanBadge: chosenPlan?.badge || '👥 Artisan Group',
         deliveryEta: chosenPlan?.deliveryEta || '3-5 business days',
         supplierId: chosenPlan?.supplier?.supplierId || 'S-DEFAULT',
         supplierName: chosenPlan?.supplier?.supplierName || 'Verified Regional Supplier',
@@ -255,7 +283,6 @@ export default function ArtisanMatching() {
       isBatch: isMultiItem,
       itemsCount: batchItems.length,
       items: batchItems,
-
       // Aggregated fields for display and backwards compatibility:
       category: isMultiItem
         ? batchItems.map((it) => it.category).join(', ')
@@ -299,17 +326,19 @@ export default function ArtisanMatching() {
 
     dispatch({
       type: 'UPDATE_PROGRESS',
-      current_step: 'order_confirmation',
+      current_step: 'choose_supplier',
       onboarding_complete: false,
     })
 
-    navigate('/artisan/confirm')
+    navigate(
+      `/artisan/suppliers?category=${encodeURIComponent(currentReq.category)}&location=${encodeURIComponent(activeDeliveryLocation)}${queryBatchId ? `&batchId=${queryBatchId}` : ''}&reqId=${currentReq.id}&groupId=${activeChoice.id}`
+    )
   }
 
   return (
     <div className="page">
       <Stepper
-        steps={['Your details', 'Material needs', 'Match & buy', 'Confirm', 'Track']}
+        steps={['Your details', 'Material needs', 'Artisan groups', 'Choose supplier', 'Confirm', 'Track']}
         current={2}
       />
 
@@ -370,96 +399,15 @@ export default function ArtisanMatching() {
         </div>
       )}
 
-      {/* 1. Database Compatibility Analysis Radar (Dynamic according to selected group) */}
-      {analysis && activeChoice && (
-        <section className="analysis-radar-card" aria-label="Database Compatibility Radar">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <div className="analysis-radar-title">
-              <span>📡</span>
-              <span>{t('dbAnalysisHeader') || 'Database Analysis & Dynamic Group Radar'}</span>
-            </div>
-            <span
-              style={{
-                background: 'rgba(251, 191, 36, 0.2)',
-                color: '#fef08a',
-                border: '1px solid rgba(251, 191, 36, 0.4)',
-                borderRadius: '999px',
-                padding: '0.25rem 0.75rem',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-              }}
-            >
-              ⚡ Active Group: {activeChoice.title}
-            </span>
-          </div>
-
-          <p className="analysis-radar-sub">
-            {`Scanned Assam craft network for ${currentReq.category} (${currentReq.specification || 'craft grade'}). Displaying real-time allocation for selected group strategy (${activeChoice.badge}) supplied by ${activeChoice.supplier.supplierName} (${activeChoice.supplier.supplierLocation}).`}
-          </p>
-
-          {/* Group Strategy Selector Quick Tabs */}
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.1rem' }}>
-            {choices.map((c) => {
-              const isCurrent = c.id === activeChoice.id
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => handleSelectChoice(c.id)}
-                  style={{
-                    background: isCurrent ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)',
-                    border: isCurrent ? '1.5px solid #fbbf24' : '1px solid rgba(255,255,255,0.18)',
-                    color: isCurrent ? '#fbbf24' : '#ffffff',
-                    padding: '0.35rem 0.8rem',
-                    borderRadius: '6px',
-                    fontSize: '0.82rem',
-                    fontWeight: isCurrent ? 700 : 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {c.badge.split(' ')[0]} {c.title}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Dynamic KPIs driven by active selected group */}
-          <div className="analysis-kpi-grid">
-            <div className="analysis-kpi-item">
-              <div className="analysis-kpi-val">{activeChoice.perArtisan.length} Artisans</div>
-              <div className="analysis-kpi-lbl">Artisans in Selected Group</div>
-            </div>
-            <div className="analysis-kpi-item">
-              <div className="analysis-kpi-val">
-                {activeChoice.totalPooledQuantity} {currentReq.unit}
-              </div>
-              <div className="analysis-kpi-lbl">Consolidated Group Volume</div>
-            </div>
-            <div className="analysis-kpi-item">
-              <div className="analysis-kpi-val">
-                Save {activeChoice.soloComparison.savingsPct}%
-              </div>
-              <div className="analysis-kpi-lbl">Group Syndicate Discount</div>
-            </div>
-            <div className="analysis-kpi-item">
-              <div className="analysis-kpi-val">{activeChoice.deliveryEta}</div>
-              <div className="analysis-kpi-lbl">Estimated Delivery ETA</div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 2. Three Curated Procurement Choices */}
-      <section className="choices-section-heading">
-        <h2 style={{ fontSize: '1.45rem', margin: '0 0 0.35rem' }}>
-          {t('threeChoicesHeading') || 'Select Your Procurement Plan (3 Curated Choices)'}
+      {/* Three Location-Based Artisan Groups Header (Minimalist & Clean) */}
+      <div style={{ marginTop: '1.25rem', marginBottom: '1rem' }}>
+        <h2 style={{ fontSize: '1.35rem', margin: '0 0 0.25rem' }}>
+          📍 3 Artisan Groups in {activeDeliveryLocation}
         </h2>
-        <p style={{ color: 'var(--ink-soft)', margin: 0, fontSize: '0.92rem' }}>
-          {t('threeChoicesSub') ||
-            'Choose between local rapid dispatch, maximum wholesale tier savings, or verified top-rated direct delivery.'}
+        <p style={{ color: 'var(--ink-soft)', margin: 0, fontSize: '0.9rem' }}>
+          Choose an artisan group pooling orders for <strong>{currentReq.category}</strong> to unlock wholesale rates and share freight.
         </p>
-      </section>
+      </div>
 
       <div className="choices-grid">
         {choices.map((choice) => {
@@ -468,93 +416,98 @@ export default function ArtisanMatching() {
           return (
             <div
               key={choice.id}
-              className={`choice-card ${isSelected ? 'is-selected' : ''}`}
+              className={`choice-card group-choice-card ${isSelected ? 'is-selected' : ''}`}
               onClick={() => handleSelectChoice(choice.id)}
             >
               <div>
-                <span
-                  className="choice-badge-top"
-                  style={{
-                    background: isSelected ? 'var(--brass)' : '#e2e8f0',
-                    color: isSelected ? '#ffffff' : '#334155',
-                  }}
-                >
-                  {choice.badge}
-                </span>
-
-                <h3 className="choice-title">{choice.title}</h3>
-                <div className="choice-subtitle">{choice.subtitle}</div>
-
-                {/* Supplier Preview */}
-                <div className="choice-supplier-box">
+                {/* Header: Group Name and Artisan Count Badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.6rem' }}>
                   <div>
-                    <strong>{choice.supplier.supplierName}</strong>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--ink-soft)' }}>
-                      📍 {choice.supplier.supplierLocation} &middot; {choice.deliveryEta}
+                    <h3 className="choice-title" style={{ margin: 0, fontSize: '1.12rem' }}>
+                      {choice.groupName}
+                    </h3>
+                    <div className="choice-subtitle" style={{ fontSize: '0.8rem', color: 'var(--ink-soft)', marginTop: '0.2rem' }}>
+                      📍 {choice.subtitle}
                     </div>
                   </div>
-                  <RatingStars value={choice.supplier.supplierRating} />
+                  <span className="group-artisan-count-badge" style={{ flexShrink: 0 }}>
+                    👥 <strong>{choice.artisanCount} Artisans</strong>
+                  </span>
                 </div>
 
-                {/* Fellow Artisans Pooled */}
-                <div className="choice-peers-wrap">
-                  <span className="choice-peers-label">
-                    {t('fellowArtisansInPool') || 'Pooled Artisans'} ({choice.perArtisan.length}):
+                {/* Fellow Artisans & How Much They Ordered (Clean Minimalist List) */}
+                <div className="choice-peers-wrap" style={{ marginTop: '0.6rem', marginBottom: '0.75rem' }}>
+                  <span className="choice-peers-label" style={{ fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    Group Members & Quantities:
                   </span>
-                  <div className="choice-peers-list">
+                  <div className="choice-peers-list" style={{ marginTop: '0.4rem', gap: '0.35rem' }}>
                     {choice.perArtisan.map((member) => (
                       <div
                         key={member.artisanId}
                         className={`peer-chip ${member.isMe ? 'is-me' : ''}`}
+                        style={{ padding: '0.35rem 0.6rem', fontSize: '0.82rem' }}
                       >
-                        <span>
-                          {member.isMe ? '👤 You' : `👥 ${member.name}`}
-                          {!member.isMe && (
-                            <span style={{ color: 'var(--ink-soft)', fontSize: '0.74rem' }}>
-                              {' '}
-                              ({member.location.split(',')[0]} &middot; {member.distanceKm} km)
-                            </span>
-                          )}
-                        </span>
-                        <span>
-                          {member.quantity} {currentReq.unit}
-                        </span>
+                        <div>
+                          <span>{member.isMe ? '👤 ' : '• '}</span>
+                          <strong>{member.name}</strong>
+                          <span style={{ fontSize: '0.74rem', color: 'var(--ink-soft)', marginLeft: '0.35rem' }}>
+                            ({member.location.split(',')[0]})
+                          </span>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <strong style={{ color: member.isMe ? 'var(--brass-dark, #8F6415)' : 'var(--ink)' }}>
+                            {member.quantity} {currentReq.unit}
+                          </strong>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
+
+                {/* Total Bulk Before Ordering */}
+                <div className="bulk-stat-box" style={{ padding: '0.6rem 0.8rem', marginTop: '0.5rem', marginBottom: '0.75rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--ink-soft)' }}>
+                      📦 Combined Group Volume:
+                    </span>
+                    <strong style={{ fontSize: '1.02rem', color: '#15803d' }}>
+                      {choice.totalPooledQuantity} {currentReq.unit}
+                    </strong>
+                  </div>
+                </div>
               </div>
 
-              {/* Calculated Cost Highlights */}
+              {/* Calculated Cost Highlights: Your Payable Amount */}
               <div>
-                <div className="choice-cost-highlight">
-                  <div className="choice-cost-main">
-                    <span style={{ fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
-                      {t('yourTotalPayable') || 'Your Total Share'}:
+                <div className="choice-cost-highlight" style={{ padding: '0.75rem', marginTop: '0.5rem' }}>
+                  <div className="choice-cost-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--ink-soft)' }}>
+                      Your Payable Share:
                     </span>
-                    <span className="choice-cost-val">
+                    <span className="choice-cost-val" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
                       ₹{choice.myShare.totalCost.toLocaleString('en-IN')}
                     </span>
                   </div>
 
-                  <div className="choice-cost-breakdown">
-                    ₹{choice.myShare.materialCost.toLocaleString('en-IN')} material (@ ₹{choice.unitPrice}/{currentReq.unit}) + ₹{choice.myShare.transportShare.toLocaleString('en-IN')} freight share
+                  <div className="choice-cost-breakdown" style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}>
+                    ₹{choice.myShare.materialCost.toLocaleString('en-IN')} material + ₹{choice.myShare.transportShare.toLocaleString('en-IN')} freight
                   </div>
 
-                  <div className="choice-savings-tag">
-                    🎉 Save ₹{choice.soloComparison.savings.toLocaleString('en-IN')} ({choice.soloComparison.savingsPct}% off retail)
+                  <div className="choice-savings-tag" style={{ marginTop: '0.35rem', fontSize: '0.75rem' }}>
+                    🎉 Save ₹{choice.soloComparison.savings.toLocaleString('en-IN')} ({choice.soloComparison.savingsPct}% vs solo)
                   </div>
                 </div>
 
                 <button
                   type="button"
                   className="btn-select-choice"
+                  style={{ marginTop: '0.65rem', padding: '0.55rem' }}
                   onClick={(e) => {
                     e.stopPropagation()
                     handleSelectChoice(choice.id)
                   }}
                 >
-                  {isSelected ? (t('selectedPlanBadge') || '✓ Selected Plan') : (t('selectPlanBtn') || 'Select This Plan')}
+                  {isSelected ? '✓ Selected Group' : `Select Group ${choice.groupNumber}`}
                 </button>
               </div>
             </div>
@@ -562,96 +515,27 @@ export default function ArtisanMatching() {
         })}
       </div>
 
-      {/* 3. Detailed Itemized Cost Breakdown for Selected Choice */}
-      {activeChoice && (
-        <section className="selected-plan-detail-card" aria-label="Cost Allocation Breakdown">
-          <div className="selected-plan-header">
-            <div>
-              <span className="tag tag-brass" style={{ marginBottom: '0.4rem', display: 'inline-block' }}>
-                Active Plan for {currentReq.category}: {activeChoice.title}
-              </span>
-              <h3 style={{ margin: 0 }}>
-                {t('costCalculationHeading') || 'Itemized Whole Cost Calculation Breakdown'} ({currentReq.category})
-              </h3>
-              <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', color: 'var(--ink-soft)' }}>
-                {t('quoteFreezeNotice') ||
-                  `Quotation valid until ${activeChoice.supplier.validity || '2026-09-28'} from ${activeChoice.supplier.supplierName}. Zero hidden transport fees.`}
-              </p>
+      {/* Clean Selected Group Summary & CTA Bar */}
+      {activeChoice && myRequests.length === 1 && (
+        <div className="action-bar-confirm" style={{ marginTop: '1.5rem' }}>
+          <div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--ink)' }}>
+              Selected: {activeChoice.groupName} ({activeChoice.artisanCount} Artisans)
             </div>
-
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--ink-soft)' }}>Consolidated Order Total</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--ink)' }}>
-                ₹{activeChoice.grandTotal.toLocaleString('en-IN')}
-              </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--ink-soft)' }}>
-                {activeChoice.totalPooledQuantity} {currentReq.unit} bulk order
-              </div>
-            </div>
+            <span style={{ fontSize: '0.84rem', color: 'var(--ink-soft)' }}>
+              Total pooled bulk: <strong>{activeChoice.totalPooledQuantity} {currentReq.unit}</strong> &middot; Your payable share: <strong style={{ color: 'var(--brass-dark, #8F6415)' }}>₹{activeChoice.myShare.totalCost.toLocaleString('en-IN')}</strong>
+            </span>
           </div>
 
-          <table className="selected-plan-table">
-            <thead>
-              <tr>
-                <th>{t('colArtisan') || 'Artisan'}</th>
-                <th>Location / Distance</th>
-                <th>{t('colQuantity') || 'Quantity'}</th>
-                <th>{t('materialCost') || 'Material Share'}</th>
-                <th>{t('freightShare') || 'Fair Freight Share'}</th>
-                <th>{t('totalPayable') || 'Total Payable'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activeChoice.perArtisan.map((member) => (
-                <tr
-                  key={member.artisanId}
-                  className={member.isMe ? 'active-row' : ''}
-                >
-                  <td>
-                    {member.isMe ? <strong>👤 {artisan.name} (You)</strong> : member.name}
-                  </td>
-                  <td>
-                    {member.location} {member.distanceKm > 0 ? `(${member.distanceKm} km)` : ''}
-                  </td>
-                  <td>
-                    {member.quantity} {currentReq.unit} ({Math.round(member.share * 100)}%)
-                  </td>
-                  <td>₹{member.materialCost.toLocaleString('en-IN')}</td>
-                  <td>₹{member.transportShare.toLocaleString('en-IN')}</td>
-                  <td>
-                    <strong>₹{member.totalCost.toLocaleString('en-IN')}</strong>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Single Item Action Bar (If only 1 material in batch) */}
-          {myRequests.length === 1 && (
-            <div className="action-bar-confirm">
-              <div>
-                <div style={{ fontSize: '1.05rem' }}>
-                  Your Final Amount Payable:{' '}
-                  <strong style={{ color: 'var(--brass-dark, #8F6415)', fontSize: '1.3rem' }}>
-                    ₹{activeChoice.myShare.totalCost.toLocaleString('en-IN')}
-                  </strong>
-                </div>
-                <span style={{ fontSize: '0.82rem', color: 'var(--ink-soft)' }}>
-                  Includes ₹{activeChoice.myShare.materialCost} raw material + ₹{activeChoice.myShare.transportShare} freight allocation
-                </span>
-              </div>
-
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{ padding: '0.85rem 1.8rem', fontSize: '1rem' }}
-                onClick={handleProceedToConfirm}
-              >
-                {t('proceedToConfirmBtn') || `Proceed with ${activeChoice.title} →`}
-              </button>
-            </div>
-          )}
-        </section>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ padding: '0.85rem 1.8rem', fontSize: '1rem', fontWeight: 700 }}
+            onClick={handleProceedToConfirm}
+          >
+            Proceed to Supplier Selection (3 in {activeDeliveryLocation}) →
+          </button>
+        </div>
       )}
 
       {/* 4. Combined Multi-Material Batch Order Summary (Rendered when 2+ materials exist in this batch) */}
@@ -777,7 +661,7 @@ export default function ArtisanMatching() {
               style={{ padding: '0.85rem 2rem', fontSize: '1.05rem', fontWeight: 700 }}
               onClick={handleProceedToConfirm}
             >
-              Confirm All {batchItems.length} Materials (₹{batchGrandTotal.toLocaleString('en-IN')}) →
+              Proceed to Choose Suppliers for All {batchItems.length} Materials →
             </button>
           </div>
         </section>

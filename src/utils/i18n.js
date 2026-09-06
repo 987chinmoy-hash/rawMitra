@@ -63,6 +63,8 @@ export const TRANSLATIONS = {
     // Stepper
     stepDetails: 'Your details',
     stepNeeds: 'Material needs',
+    stepGroups: 'Artisan groups',
+    stepSuppliers: 'Choose supplier',
     stepMatch: 'Match & buy',
     stepConfirm: 'Confirm',
     stepTrack: 'Track',
@@ -332,6 +334,8 @@ export const TRANSLATIONS = {
     // Stepper
     stepDetails: 'विवरण',
     stepNeeds: 'सामग्री जरूरतें',
+    stepGroups: 'कारीगर समूह',
+    stepSuppliers: 'आपूर्तिकर्ता चुनें',
     stepMatch: 'मिलान और खरीद',
     stepConfirm: 'पुष्टि करें',
     stepTrack: 'ट्रैकिंग',
@@ -602,6 +606,8 @@ export const TRANSLATIONS = {
     // Stepper
     stepDetails: 'আপোনাৰ বিৱৰণ',
     stepNeeds: 'কেঁচামালৰ প্ৰয়োজনীয়তা',
+    stepGroups: 'শিল্পী দলসমূহ',
+    stepSuppliers: 'যোগানকৰ্তা বাছক',
     stepMatch: 'দল গঠন আৰু ক্ৰয়',
     stepConfirm: 'নিশ্চিতকৰণ',
     stepTrack: 'ট্ৰেকিং',

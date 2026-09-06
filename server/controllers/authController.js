@@ -644,6 +644,8 @@ export function bootstrap(req, res) {
         materialTotal: o.material_total,
         transportTotal: o.transport_total,
         totalCost: o.total_cost,
+        groupName: o.group_name || 'Artisan Collective Group',
+        deliveryLocation: o.delivery_location || 'Tezpur',
         status: o.status,
         trackingStage: o.tracking_stage,
         validity: o.validity_snapshot,
@@ -690,5 +692,57 @@ export function bootstrap(req, res) {
     return res.status(500).json({
       error: 'Failed to retrieve database state.',
     })
+  }
+}
+
+/*
+ * Get all registered suppliers with their material catalogs
+ */
+export function getAllSuppliers(req, res) {
+  try {
+    const suppliers = db.prepare(`
+      SELECT
+        id,
+        role,
+        name,
+        phone,
+        aadhar_masked as aadhar,
+        store_location as storeLocation,
+        rating,
+        reviews_count as reviews,
+        created_at
+      FROM users
+      WHERE role = 'supplier'
+      ORDER BY created_at DESC
+    `).all()
+
+    const suppliersWithMaterials = suppliers.map((s) => {
+      const materials = db.prepare(`
+        SELECT
+          category,
+          specification,
+          unit,
+          price_per_unit as pricePerUnit,
+          min_bulk_qty as minBulkQty,
+          transport_charge as transportCharge,
+          validity_date as validity,
+          logistics
+        FROM supplier_materials
+        WHERE supplier_id = ?
+      `).all(s.id)
+
+      return {
+        ...s,
+        materials,
+        transportCharge: materials[0]?.transportCharge || 350,
+        logistics: materials[0]?.logistics || 'shipment',
+        validity: materials[0]?.validity || '2026-09-30',
+      }
+    })
+
+    return res.json({ suppliers: suppliersWithMaterials })
+  } catch (err) {
+    console.error('Get all suppliers error:', err)
+    return res.status(500).json({ error: 'Failed to fetch registered suppliers.' })
   }
 }

@@ -51,6 +51,26 @@ export default function ArtisanRegister() {
     }
   }, [existingArtisan?.id, navigate])
 
+  function handleDemoFill(city = 'Tezpur') {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000)
+    const randomAadhaar = `${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${randomSuffix}`
+    const randomPhone = `9876${Math.floor(100000 + Math.random() * 900000)}`
+    setForm({
+      name: `Rohit Artisan (${city})`,
+      aadhar: randomAadhaar,
+      storeLocation: `${city}, Assam`,
+      phone: randomPhone,
+    })
+    setErrors({})
+  }
+
+  function handleGenerateAadhaar() {
+    const p1 = Math.floor(1000 + Math.random() * 9000)
+    const p2 = Math.floor(1000 + Math.random() * 9000)
+    const p3 = Math.floor(1000 + Math.random() * 9000)
+    update('aadhar', `${p1} ${p2} ${p3}`)
+  }
+
   function update(field, value) {
     setForm((f) => ({
       ...f,
@@ -112,6 +132,7 @@ export default function ArtisanRegister() {
           .trim()
           .replace(/\s/g, '')
           .slice(-4)}`,
+        rawAadhar: form.aadhar.trim().replace(/\s/g, ''),
 
         storeLocation: form.storeLocation.trim(),
         phone: form.phone.trim(),
@@ -138,7 +159,8 @@ export default function ArtisanRegister() {
         steps={[
           'Your details',
           'Material needs',
-          'Match & buy',
+          'Artisan groups',
+          'Choose supplier',
           'Confirm',
           'Track',
         ]}
@@ -147,6 +169,33 @@ export default function ArtisanRegister() {
 
       <h1>{t('artisanRegTitle')}</h1>
       <p>{t('artisanRegSub')}</p>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => handleDemoFill('Tezpur')}
+          className="btn btn-secondary btn-sm"
+          style={{ fontSize: '0.82rem', padding: '6px 12px' }}
+        >
+          ✨ Fast Demo Fill (Tezpur Artisan)
+        </button>
+        <button
+          type="button"
+          onClick={() => handleDemoFill('Guwahati')}
+          className="btn btn-secondary btn-sm"
+          style={{ fontSize: '0.82rem', padding: '6px 12px' }}
+        >
+          ✨ Guwahati Artisan
+        </button>
+        <button
+          type="button"
+          onClick={() => handleDemoFill('Dibrugarh')}
+          className="btn btn-secondary btn-sm"
+          style={{ fontSize: '0.82rem', padding: '6px 12px' }}
+        >
+          ✨ Dibrugarh Artisan
+        </button>
+      </div>
 
       <form
         onSubmit={handleSubmit}
@@ -175,9 +224,18 @@ export default function ArtisanRegister() {
         </div>
 
         <div className="field">
-          <label htmlFor="aadhar">
-            {t('aadharNum')}
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label htmlFor="aadhar">
+              {t('aadharNum')}
+            </label>
+            <button
+              type="button"
+              onClick={handleGenerateAadhaar}
+              style={{ background: 'none', border: 'none', color: '#16a34a', cursor: 'pointer', fontSize: '0.8rem', textDecoration: 'underline' }}
+            >
+              🎲 Generate Demo Aadhaar
+            </button>
+          </div>
 
           <input
             id="aadhar"
@@ -222,6 +280,10 @@ export default function ArtisanRegister() {
               {errors.storeLocation}
             </div>
           )}
+
+          <div className="field-hint">
+            Active hubs: <strong style={{ color: '#16a34a', cursor: 'pointer' }} onClick={() => update('storeLocation', 'Tezpur, Assam')}>Tezpur</strong>, <strong style={{ color: '#16a34a', cursor: 'pointer' }} onClick={() => update('storeLocation', 'Guwahati, Assam')}>Guwahati</strong>, <strong style={{ color: '#16a34a', cursor: 'pointer' }} onClick={() => update('storeLocation', 'Dibrugarh, Assam')}>Dibrugarh</strong>
+          </div>
         </div>
 
         <div className="field">

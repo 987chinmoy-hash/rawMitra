@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppState, useAppDispatch } from '../../context/AppContext.jsx'
+import { api } from '../../services/api.js'
 import Stepper from '../../components/Stepper.jsx'
 import './supplier.css'
 
@@ -26,11 +27,14 @@ export default function SupplierPricing() {
     Object.fromEntries(state.draftMaterials.map((l) => [l.key, '']))
   )
   const [logistics, setLogistics] = useState('shipment')
-  const [transportCharge, setTransportCharge] = useState('500')
+  const [transportCharge, setTransportCharge] = useState('350')
   const [validity, setValidity] = useState(new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10))
+  const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
+    setSubmitting(true)
+
     const materials = state.draftMaterials
       .filter((l) => prices[l.key])
       .map((l) => ({
@@ -43,16 +47,25 @@ export default function SupplierPricing() {
         validity: validity || '2026-09-30',
       }))
 
+    const supplierPayload = {
+      ...profile,
+      materials,
+      logistics,
+      transportCharge: Number(transportCharge) || 350,
+      validity: validity || '2026-09-30',
+    }
+
+    try {
+      await api.supplier.registerSupplier(supplierPayload)
+    } catch (apiErr) {
+      console.warn('Backend supplier registration notice:', apiErr.message)
+    }
+
     dispatch({
       type: 'REGISTER_SUPPLIER',
-      payload: {
-        ...profile,
-        materials,
-        logistics,
-        transportCharge: Number(transportCharge) || 0,
-        validity: validity || '2026-09-30',
-      },
+      payload: supplierPayload,
     })
+
     navigate('/supplier/dashboard')
   }
 

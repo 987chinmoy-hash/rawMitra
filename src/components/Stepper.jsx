@@ -4,6 +4,8 @@ import './Stepper.css'
 const STEP_KEY_MAP = {
   'Your details': 'stepDetails',
   'Material needs': 'stepNeeds',
+  'Artisan groups': 'stepGroups',
+  'Choose supplier': 'stepSuppliers',
   'Match & buy': 'stepMatch',
   'Confirm': 'stepConfirm',
   'Track': 'stepTrack',

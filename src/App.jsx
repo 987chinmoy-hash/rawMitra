@@ -11,6 +11,7 @@ import DemandForecast from './pages/DemandForecast.jsx'
 import ArtisanRegister from './pages/artisan/ArtisanRegister.jsx'
 import ArtisanMaterials from './pages/artisan/ArtisanMaterials.jsx'
 import ArtisanMatching from './pages/artisan/ArtisanMatching.jsx'
+import ArtisanSupplierSelect from './pages/artisan/ArtisanSupplierSelect.jsx'
 import ArtisanRequestBroadcast from './pages/artisan/ArtisanRequestBroadcast.jsx'
 import ArtisanOrderConfirm from './pages/artisan/ArtisanOrderConfirm.jsx'
 import ArtisanTracking from './pages/artisan/ArtisanTracking.jsx'
@@ -136,6 +137,7 @@ export default function App() {
             <Route path="/artisan/register" element={<ArtisanRegister />} />
             <Route path="/artisan/materials" element={<ArtisanMaterials />} />
             <Route path="/artisan/matching" element={<ArtisanMatching />} />
+            <Route path="/artisan/suppliers" element={<ArtisanSupplierSelect />} />
             <Route path="/artisan/request" element={<ArtisanRequestBroadcast />} />
             <Route path="/artisan/confirm" element={<ArtisanOrderConfirm />} />
             <Route path="/artisan/tracking" element={<ArtisanTracking />} />

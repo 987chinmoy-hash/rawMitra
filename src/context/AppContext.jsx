@@ -362,8 +362,8 @@ function reducer(state, action) {
 
       const order = {
         id: genId('O'),
-        status: 'confirmed',
-        trackingStage: 0,
+        status: action.payload.status || 'placed',
+        trackingStage: action.payload.trackingStage || 0,
         coordinatorId:
           action.payload.coordinatorId || null,
         ...action.payload,
@@ -431,6 +431,10 @@ function reducer(state, action) {
                   o.trackingStage + 1,
                   4
                 ),
+                status:
+                  o.trackingStage + 1 >= 4
+                    ? 'delivered'
+                    : 'in_transit',
               }
             : o
         ),
@@ -446,6 +450,53 @@ function reducer(state, action) {
                 ...o,
                 status: 'cancelled',
                 penaltyApplied: true,
+              }
+            : o
+        ),
+      }
+    }
+
+    case 'ACCEPT_ORDER': {
+      return {
+        ...state,
+        orders: state.orders.map((o) =>
+          o.id === action.orderId
+            ? {
+                ...o,
+                status: 'accepted',
+                trackingStage: 1,
+              }
+            : o
+        ),
+      }
+    }
+
+    case 'REJECT_ORDER': {
+      return {
+        ...state,
+        orders: state.orders.map((o) =>
+          o.id === action.orderId
+            ? {
+                ...o,
+                status: 'rejected',
+              }
+            : o
+        ),
+      }
+    }
+
+    case 'UPDATE_ORDER_STATUS': {
+      return {
+        ...state,
+        orders: state.orders.map((o) =>
+          o.id === action.orderId
+            ? {
+                ...o,
+                status: action.status,
+                trackingStage:
+                  typeof action.trackingStage === 'number'
+                    ? action.trackingStage
+                    : o.trackingStage,
               }
             : o
         ),
@@ -499,41 +550,35 @@ function reducer(state, action) {
     case 'HYDRATE_SERVER_DATA': {
       const d = action.data || {}
 
+      const existingSupIds = new Set(state.suppliers.map((s) => s.id))
+      const newSuppliers = (d.suppliers || []).filter((s) => !existingSupIds.has(s.id))
+      const mergedSuppliers = [...state.suppliers, ...newSuppliers]
+
+      const existingArtIds = new Set(state.artisans.map((a) => a.id))
+      const newArtisans = (d.artisans || []).filter((a) => !existingArtIds.has(a.id))
+      const mergedArtisans = [...state.artisans, ...newArtisans]
+
       return {
         ...state,
         isBackendOnline: true,
-
-        artisans:
-          d.artisans && d.artisans.length > 0
-            ? d.artisans
-            : state.artisans,
-
-        suppliers:
-          d.suppliers && d.suppliers.length > 0
-            ? d.suppliers
-            : state.suppliers,
-
+        artisans: mergedArtisans,
+        suppliers: mergedSuppliers,
         coordinators:
           d.coordinators && d.coordinators.length > 0
             ? d.coordinators
             : state.coordinators,
-
         materialRequests:
-          d.materialRequests &&
-          d.materialRequests.length > 0
+          d.materialRequests && d.materialRequests.length > 0
             ? d.materialRequests
             : state.materialRequests,
-
         orders:
           d.orders && d.orders.length > 0
             ? d.orders
             : state.orders,
-
         broadcasts:
           d.broadcasts && d.broadcasts.length > 0
             ? d.broadcasts
             : state.broadcasts,
-
         penalties:
           d.penalties ||
           state.penalties ||
@@ -681,34 +726,34 @@ export function AppProvider({ children }) {
 
     try {
       if (action.type === 'CREATE_ORDER') {
-        await api.orders.create(
-          action.payload
-        )
+        try {
+          await api.orders.create(
+            action.payload
+          )
+        } catch (orderErr) {
+          console.warn('Backend order sync info:', orderErr.message)
+        }
 
         /*
          * Once an order is created, the artisan has
          * moved to the order confirmation stage.
          */
         if (state.authUser?.role === 'artisan') {
-          await api.auth.updateProgress({
-            current_step:
-              'order_confirmation',
-            onboarding_complete: false,
-          })
-
-          /*
-           * Refresh the authenticated user so the
-           * local state contains the server value.
-           */
-          const meRes =
-            await api.auth.getMe()
-
-          if (meRes?.user) {
-            dispatch({
-              type: 'SET_AUTH_USER',
-              user: meRes.user,
+          try {
+            await api.auth.updateProgress({
+              current_step:
+                'order_confirmation',
+              onboarding_complete: false,
             })
-          }
+
+            const meRes = await api.auth.getMe()
+            if (meRes?.user) {
+              dispatch({
+                type: 'SET_AUTH_USER',
+                user: meRes.user,
+              })
+            }
+          } catch (e) {}
         }
       } else if (
         action.type === 'WITHDRAW_REQUEST'
@@ -739,11 +784,56 @@ export function AppProvider({ children }) {
           action.orderId
         )
       } else if (
+        action.type === 'ACCEPT_ORDER'
+      ) {
+        await api.orders.accept(
+          action.orderId,
+          action.supplierId
+        )
+      } else if (
+        action.type === 'REJECT_ORDER'
+      ) {
+        await api.orders.reject(
+          action.orderId,
+          action.reason,
+          action.supplierId
+        )
+      } else if (
+        action.type === 'UPDATE_ORDER_STATUS'
+      ) {
+        if (action.status === 'accepted') {
+          await api.orders.accept(action.orderId, action.supplierId)
+        } else if (action.status === 'rejected') {
+          await api.orders.reject(action.orderId, 'Declined', action.supplierId)
+        } else if (action.status === 'placed') {
+          await api.orders.reset(action.orderId)
+        }
+      } else if (
         action.type === 'CANCEL_ORDER'
       ) {
         await api.orders.cancel(
           action.orderId
         )
+      } else if (action.type === 'REGISTER_SUPPLIER') {
+        try {
+          await api.supplier.registerSupplier(action.payload)
+        } catch (e) {
+          console.warn('Backend supplier sync info:', e.message)
+        }
+      } else if (action.type === 'REGISTER_ARTISAN') {
+        try {
+          const rawAadhaar = action.payload.rawAadhar || (action.payload.aadhar && action.payload.aadhar.replace(/\D/g, '').length === 12 ? action.payload.aadhar.replace(/\D/g, '') : `8888${action.payload.phone.slice(-8)}`)
+          await api.auth.register({
+            role: 'artisan',
+            name: action.payload.name,
+            phone: action.payload.phone,
+            password: action.payload.password || 'password123',
+            aadhar: rawAadhaar,
+            storeLocation: action.payload.storeLocation,
+          })
+        } catch (e) {
+          console.warn('Backend artisan sync info:', e.message)
+        }
       } else if (
         action.type ===
         'ADD_MATERIAL_REQUESTS'

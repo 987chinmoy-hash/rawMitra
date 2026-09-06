@@ -12,7 +12,7 @@ function emptyLine() {
 export default function SupplierRegister() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', aadhar: '', storeLocation: '', phone: '' })
+  const [form, setForm] = useState({ name: '', aadhar: '', storeLocation: '', phone: '', password: '' })
   const [lines, setLines] = useState([emptyLine()])
   const [errors, setErrors] = useState({})
 
@@ -21,12 +21,35 @@ export default function SupplierRegister() {
   function addLine() { setLines((ls) => [...ls, emptyLine()]) }
   function removeLine(key) { setLines((ls) => ls.filter((l) => l.key !== key)) }
 
+  function handleRandomAadhaar() {
+    const randomAadhaar = `8888 ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)}`
+    update('aadhar', randomAadhaar)
+  }
+
+  function handleDemoFill() {
+    const randPhone = `9864${Math.floor(100000 + Math.random() * 900000)}`
+    const randAadhaar = `8888 ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)}`
+    setForm({
+      name: 'Maa Kamakhya Craft Materials',
+      aadhar: randAadhaar,
+      storeLocation: 'Mission Chariali, Tezpur',
+      phone: randPhone,
+      password: 'password123',
+    })
+    setLines([
+      { key: 'demo-1', category: 'Clay', specification: 'Terracotta potting clay, fine grade', quantity: '500', unit: 'kg' },
+      { key: 'demo-2', category: 'Bamboo', specification: 'Treated Bhaluka bamboo poles, 10ft', quantity: '200', unit: 'piece' },
+    ])
+    setErrors({})
+  }
+
   function validate() {
     const e = {}
     if (!form.name.trim()) e.name = 'Enter a business or contact name.'
     if (!/^\d{4}\s?\d{4}\s?\d{4}$/.test(form.aadhar.trim())) e.aadhar = 'Enter a 12-digit Aadhar number.'
-    if (!form.storeLocation.trim()) e.storeLocation = 'Enter your store or warehouse location.'
+    if (!form.storeLocation.trim()) e.storeLocation = 'Enter your store or warehouse location (e.g. Tezpur, Guwahati, Dibrugarh).'
     if (!/^\d{10}$/.test(form.phone.trim())) e.phone = 'Enter a 10-digit phone number.'
+    if (!form.password || form.password.trim().length < 4) e.password = 'Enter a password (at least 4 characters).'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -39,9 +62,11 @@ export default function SupplierRegister() {
     navigate('/supplier/pricing', {
       state: {
         name: form.name.trim(),
-        aadhar: `•••• •••• ${form.aadhar.trim().slice(-4)}`,
+        aadhar: `•••• •••• ${form.aadhar.trim().replace(/\s/g, '').slice(-4)}`,
+        rawAadhar: form.aadhar.trim().replace(/\s/g, ''),
         storeLocation: form.storeLocation.trim(),
         phone: form.phone.trim(),
+        password: form.password.trim(),
       },
     })
   }
@@ -50,6 +75,26 @@ export default function SupplierRegister() {
     <div className="page page-narrow">
       <Stepper steps={['Your details & stock', 'Pricing & logistics']} current={0} />
       <h1>Tell us about your supply business</h1>
+
+      {/* Demo Autofill Helper Toolbar */}
+      <div style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={handleDemoFill}
+          className="btn btn-outline"
+          style={{ background: '#fdf8ec', borderColor: 'var(--brass, #c08a28)', color: 'var(--brass-dark, #8f6415)', fontSize: '0.84rem', fontWeight: 600 }}
+        >
+          ✨ Fast 1-Click Demo Fill (Tezpur Supplier)
+        </button>
+        <button
+          type="button"
+          onClick={handleRandomAadhaar}
+          className="btn btn-outline"
+          style={{ fontSize: '0.84rem' }}
+        >
+          🎲 Generate Demo Aadhaar
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="card" noValidate>
         <div className="field">
@@ -64,13 +109,27 @@ export default function SupplierRegister() {
         </div>
         <div className="field">
           <label htmlFor="loc">Location of store / warehouse</label>
-          <input id="loc" value={form.storeLocation} onChange={(e) => update('storeLocation', e.target.value)} placeholder="e.g. Guwahati, Assam" />
+          <input id="loc" value={form.storeLocation} onChange={(e) => update('storeLocation', e.target.value)} placeholder="e.g. Mission Chariali, Tezpur" />
+          <span className="field-hint">Enter city / hub (e.g. Tezpur, Guwahati, Dibrugarh)</span>
           {errors.storeLocation && <div className="field-error">{errors.storeLocation}</div>}
         </div>
         <div className="field">
           <label htmlFor="phone">Phone number</label>
           <input id="phone" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="10-digit mobile number" inputMode="numeric" />
           {errors.phone && <div className="field-error">{errors.phone}</div>}
+        </div>
+        <div className="field">
+          <label htmlFor="password">Login Password (for Supplier Dashboard)</label>
+          <input
+            id="password"
+            type="password"
+            value={form.password}
+            onChange={(e) => update('password', e.target.value)}
+            placeholder="Enter password (e.g. 123456)"
+            autoComplete="new-password"
+          />
+          {errors.password && <div className="field-error">{errors.password}</div>}
+          <span className="field-hint">You will use this password and phone number to log into your Supplier Portal.</span>
         </div>
 
         <hr className="divider" />

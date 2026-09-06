@@ -2,7 +2,7 @@
 // Manages JWT token storage and automatically sends
 // Bearer authentication headers with authenticated requests.
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://rawmitra-backend.onrender.com/api'
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
 const TOKEN_KEY = 'rawmitra_auth_token'
 
 function getToken() {
@@ -163,8 +163,10 @@ export const api = {
       }),
   },
 
-  // Supplier stock
+  // Supplier stock & catalog
   supplier: {
+    getAll: () => request('/suppliers'),
+
     saveStock: (payload) =>
       request('/supplier/stock', {
         method: 'POST',
@@ -173,6 +175,45 @@ export const api = {
 
     getMyStock: () =>
       request('/supplier/my-stock'),
+
+    getOrders: (supplierId) =>
+      request('/supplier/orders' + (supplierId ? `?supplierId=${encodeURIComponent(supplierId)}` : '')),
+
+    registerSupplier: async (data) => {
+      const authRes = await request('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          role: 'supplier',
+          name: data.name,
+          phone: data.phone,
+          password: data.password || 'password123',
+          aadhar: data.aadhar,
+          storeLocation: data.storeLocation,
+        }),
+      })
+
+      if (authRes?.token) {
+        setToken(authRes.token)
+      }
+
+      if (data.materials && data.materials.length > 0) {
+        try {
+          await request('/supplier/stock', {
+            method: 'POST',
+            body: JSON.stringify({
+              materials: data.materials,
+              logistics: data.logistics || 'shipment',
+              transportCharge: data.transportCharge || 350,
+              validityDate: data.validity || '2026-09-30',
+            }),
+          })
+        } catch (stockErr) {
+          console.warn('Could not save initial stock on backend:', stockErr.message)
+        }
+      }
+
+      return authRes
+    },
   },
 
   // Broadcasts / pool requests
@@ -190,6 +231,23 @@ export const api = {
       request('/orders', {
         method: 'POST',
         body: JSON.stringify(orderPayload),
+      }),
+
+    accept: (orderId, supplierId) =>
+      request(`/orders/${orderId}/accept`, {
+        method: 'PATCH',
+        body: JSON.stringify({ supplierId }),
+      }),
+
+    reject: (orderId, reason, supplierId) =>
+      request(`/orders/${orderId}/reject`, {
+        method: 'PATCH',
+        body: JSON.stringify({ reason, supplierId }),
+      }),
+
+    reset: (orderId) =>
+      request(`/orders/${orderId}/reset`, {
+        method: 'PATCH',
       }),
 
     claim: (orderId) =>

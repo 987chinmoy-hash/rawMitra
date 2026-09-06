@@ -16,7 +16,20 @@ const CATEGORY_DEFAULTS = {
   'Packaging materials': { spec: 'Corrugated boxes, medium', unit: 'piece', qty: '50' },
 }
 
-function emptyLine(defaultLocation, initialData = {}) {
+const DELIVERY_LOCATIONS = [
+  { id: 'Tezpur', name: 'Tezpur', hubTag: 'Sonitpur Hub', desc: 'North Bank Craft & Silk Syndicate' },
+  { id: 'Guwahati', name: 'Guwahati', hubTag: 'Kamrup Metro Hub', desc: 'Central Commercial & Transport Hub' },
+  { id: 'Dibrugarh', name: 'Dibrugarh', hubTag: 'Upper Assam Hub', desc: 'Eastern Tea & Textile Corridor' },
+]
+
+function resolveInitialLocation(queryLoc, artisanLoc) {
+  const check = (queryLoc || artisanLoc || '').toLowerCase()
+  if (check.includes('guwahati') || check.includes('gauhati') || check.includes('kamrup')) return 'Guwahati'
+  if (check.includes('dibrugarh') || check.includes('dibru')) return 'Dibrugarh'
+  return 'Tezpur'
+}
+
+function emptyLine(defaultLocation = 'Tezpur', initialData = {}) {
   const cat = initialData.category || MATERIAL_CATEGORIES[0]
   const defaults = CATEGORY_DEFAULTS[cat] || {}
   return {
@@ -25,7 +38,7 @@ function emptyLine(defaultLocation, initialData = {}) {
     specification: initialData.spec || defaults.spec || '',
     quantity: initialData.qty || defaults.qty || '10',
     unit: initialData.unit || defaults.unit || UNITS[0],
-    location: initialData.location || defaultLocation || 'Sualkuchi, Assam',
+    location: initialData.location || defaultLocation || 'Tezpur',
     requiredDate:
       initialData.requiredDate ||
       new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
@@ -47,7 +60,7 @@ export default function ArtisanMaterials() {
       id: 'A-1001',
       name: 'Deepa Boro',
       role: 'artisan',
-      storeLocation: 'Sualkuchi, Assam',
+      storeLocation: 'Tezpur, Assam',
     }
 
   const queryCat = searchParams.get('category')
@@ -56,13 +69,17 @@ export default function ArtisanMaterials() {
   const queryQty = searchParams.get('qty')
   const queryLoc = searchParams.get('location')
 
+  const [selectedLocation, setSelectedLocation] = useState(() =>
+    resolveInitialLocation(queryLoc, artisan.storeLocation)
+  )
+
   const [lines, setLines] = useState(() => [
-    emptyLine(artisan.storeLocation, {
+    emptyLine(selectedLocation, {
       category: queryCat,
       spec: querySpec,
       unit: queryUnit,
       qty: queryQty,
-      location: queryLoc,
+      location: selectedLocation,
     }),
   ])
 
@@ -70,12 +87,12 @@ export default function ArtisanMaterials() {
   useEffect(() => {
     if (queryCat || querySpec) {
       setLines([
-        emptyLine(artisan.storeLocation, {
+        emptyLine(selectedLocation, {
           category: queryCat,
           spec: querySpec,
           unit: queryUnit,
           qty: queryQty,
-          location: queryLoc,
+          location: selectedLocation,
         }),
       ])
     }
@@ -84,8 +101,7 @@ export default function ArtisanMaterials() {
     querySpec,
     queryUnit,
     queryQty,
-    queryLoc,
-    artisan.storeLocation,
+    selectedLocation,
   ])
 
   function handleCategoryChange(key, newCategory) {
@@ -121,11 +137,16 @@ export default function ArtisanMaterials() {
   }
 
   function addLine() {
-    setLines((ls) => [...ls, emptyLine(artisan.storeLocation)])
+    setLines((ls) => [...ls, emptyLine(selectedLocation)])
   }
 
   function removeLine(key) {
     setLines((ls) => ls.filter((l) => l.key !== key))
+  }
+
+  function handleLocationSelect(locId) {
+    setSelectedLocation(locId)
+    setLines((ls) => ls.map((l) => ({ ...l, location: locId })))
   }
 
   function handleSubmit(e) {
@@ -143,7 +164,7 @@ export default function ArtisanMaterials() {
         specification: (l.specification && l.specification.trim()) || defaults.spec || `${l.category} standard craft grade`,
         quantity: Number(l.quantity) || Number(defaults.qty) || 10,
         unit: l.unit || defaults.unit || 'piece',
-        location: (l.location && l.location.trim()) || artisan.storeLocation || 'Sualkuchi, Assam',
+        location: selectedLocation,
         requiredDate:
           l.requiredDate ||
           new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
@@ -173,19 +194,61 @@ export default function ArtisanMaterials() {
 
     const primaryReq = reqPayload[0]
     navigate(
-      `/artisan/matching?batchId=${batchId}&category=${encodeURIComponent(primaryReq.category)}&reqId=${encodeURIComponent(primaryReq.id)}`
+      `/artisan/matching?batchId=${batchId}&category=${encodeURIComponent(primaryReq.category)}&reqId=${encodeURIComponent(primaryReq.id)}&location=${encodeURIComponent(selectedLocation)}`
     )
   }
 
   return (
     <div className="page page-narrow">
       <Stepper
-        steps={['Your details', 'Material needs', 'Match & buy', 'Confirm', 'Track']}
+        steps={['Your details', 'Material needs', 'Artisan groups', 'Choose supplier', 'Confirm', 'Track']}
         current={1}
       />
 
       <h1>{t('materialsTitle')}</h1>
       <p>{t('materialsSub')}</p>
+
+      {/* 3-Location Delivery Hub Selector (Strictly 1 choice allowed) */}
+      <div className="delivery-hub-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.08rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span>📍</span>
+              <span>Delivery Hub & Location (Select One)</span>
+            </h3>
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.84rem', color: 'var(--ink-soft)' }}>
+              Choose your delivery center. Compatible artisan groups in this location will be clustered with you.
+            </p>
+          </div>
+          <span className="tag tag-brass" style={{ fontWeight: 700 }}>
+            Single Hub Only
+          </span>
+        </div>
+
+        <div className="location-selector-grid">
+          {DELIVERY_LOCATIONS.map((loc) => {
+            const isSelected = selectedLocation === loc.id
+            return (
+              <button
+                key={loc.id}
+                type="button"
+                className={`location-selector-btn ${isSelected ? 'is-selected' : ''}`}
+                onClick={() => handleLocationSelect(loc.id)}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <span className="location-pin-icon">📍</span>
+                  <span className={`location-radio-pill ${isSelected ? 'is-active' : ''}`}>
+                    {isSelected ? '✓ Selected' : 'Select'}
+                  </span>
+                </div>
+                <div className="location-hub-name">{loc.name}</div>
+                <div className="location-hub-tag">{loc.hubTag}</div>
+                <div className="location-hub-desc">{loc.desc}</div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit}>
         {lines.map((line) => (
@@ -271,14 +334,21 @@ export default function ArtisanMaterials() {
             </div>
 
             <div className="field">
-              <label>{t('locLabel')}</label>
-              <input
-                value={line.location}
-                onChange={(e) =>
-                  updateLine(line.key, 'location', e.target.value)
-                }
-                placeholder="e.g. Sualkuchi, Assam"
-              />
+              <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{t('locLabel') || 'Delivery Hub'}</span>
+                <span style={{ fontSize: '0.74rem', color: 'var(--ink-soft)' }}>
+                  Inherited from selected delivery hub
+                </span>
+              </label>
+              <div className="locked-hub-indicator">
+                <span>📍</span>
+                <span>
+                  <strong>{selectedLocation}</strong>, Assam Hub
+                </span>
+                <span className="tag tag-green" style={{ marginLeft: 'auto', fontSize: '0.72rem' }}>
+                  ✓ Locked for order
+                </span>
+              </div>
             </div>
           </div>
         ))}

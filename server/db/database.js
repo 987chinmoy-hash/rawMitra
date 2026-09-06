@@ -12,6 +12,19 @@ const db = new DatabaseSync(DB_PATH)
 db.exec('PRAGMA foreign_keys = ON;')
 
 export function initDatabase() {
+  // Check if legacy orders table has old check constraint
+  try {
+    const ordersSchema = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='orders'").get()
+    if (ordersSchema && ordersSchema.sql && !ordersSchema.sql.includes("'placed'")) {
+      db.exec(`
+        DROP TABLE IF EXISTS reviews;
+        DROP TABLE IF EXISTS penalty_ledger;
+        DROP TABLE IF EXISTS order_splits;
+        DROP TABLE IF EXISTS orders;
+      `)
+    }
+  } catch (e) {}
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -69,9 +82,11 @@ export function initDatabase() {
       material_total REAL NOT NULL,
       transport_total REAL NOT NULL,
       total_cost REAL NOT NULL,
-      status TEXT DEFAULT 'confirmed' CHECK(status IN ('confirmed', 'in_transit', 'delivered', 'cancelled')),
+      status TEXT DEFAULT 'placed' CHECK(status IN ('placed', 'confirmed', 'accepted', 'rejected', 'in_transit', 'delivered', 'cancelled')),
       tracking_stage INTEGER DEFAULT 0,
       validity_snapshot DATE,
+      group_name TEXT,
+      delivery_location TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -121,40 +136,30 @@ export function initDatabase() {
   `)
 
   // ============================================================
-  // DATABASE MIGRATION
-  // Adds new columns to an existing users table safely.
-  // Existing users and all existing data are preserved.
+  // DATABASE MIGRATIONS
+  // Safely adds columns to existing tables
   // ============================================================
 
-  const userColumns = db.prepare(`
-    PRAGMA table_info(users)
-  `).all()
+  const userColumns = db.prepare(`PRAGMA table_info(users)`).all()
+  const hasOnboardingComplete = userColumns.some(col => col.name === 'onboarding_complete')
+  const hasCurrentStep = userColumns.some(col => col.name === 'current_step')
 
-  const hasOnboardingComplete = userColumns.some(
-    column => column.name === 'onboarding_complete'
-  )
-
-  const hasCurrentStep = userColumns.some(
-    column => column.name === 'current_step'
-  )
-
-  
-
-  
-  // Add onboarding_complete if it doesn't already exist
   if (!hasOnboardingComplete) {
-    db.exec(`
-      ALTER TABLE users
-      ADD COLUMN onboarding_complete INTEGER DEFAULT 0
-    `)
+    db.exec(`ALTER TABLE users ADD COLUMN onboarding_complete INTEGER DEFAULT 0`)
+  }
+  if (!hasCurrentStep) {
+    db.exec(`ALTER TABLE users ADD COLUMN current_step TEXT DEFAULT 'role_setup'`)
   }
 
-  // Add current_step if it doesn't already exist
-  if (!hasCurrentStep) {
-    db.exec(`
-      ALTER TABLE users
-      ADD COLUMN current_step TEXT DEFAULT 'role_setup'
-    `)
+  const orderColumns = db.prepare(`PRAGMA table_info(orders)`).all()
+  const hasGroupName = orderColumns.some(col => col.name === 'group_name')
+  const hasDeliveryLocation = orderColumns.some(col => col.name === 'delivery_location')
+
+  if (!hasGroupName) {
+    try { db.exec(`ALTER TABLE orders ADD COLUMN group_name TEXT`) } catch (e) {}
+  }
+  if (!hasDeliveryLocation) {
+    try { db.exec(`ALTER TABLE orders ADD COLUMN delivery_location TEXT`) } catch (e) {}
   }
 }
 
