@@ -12,15 +12,31 @@ const PORT = process.env.PORT || 5000
 // Initialize Database Schema
 initDatabase()
 
+// Allowed origins for cross-origin requests
+const allowedOrigins = [
+  'https://raw-mitra.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.CLIENT_URL
+].filter(Boolean)
+
 // Middleware - Configured for Vercel cross-origin requests
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || '*',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (Postman, cURL, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error('CORS policy violation: Origin not allowed'))
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 )
+
 app.use(express.json())
 
 // Request Logger
