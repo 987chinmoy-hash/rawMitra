@@ -2,7 +2,7 @@
 // Manages JWT token storage and automatically sends
 // Bearer authentication headers with authenticated requests.
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://rawmitra-backend.onrender.com/api'
 const TOKEN_KEY = 'rawmitra_auth_token'
 
 function getToken() {
